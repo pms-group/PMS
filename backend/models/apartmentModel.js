@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const apartmentSchema = new Schema({
+    realestate_name: {
+        type: String,
+        required: true
+    },
     realestate_id: {
         type: String,
         required: true

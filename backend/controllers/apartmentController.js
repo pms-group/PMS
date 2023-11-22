@@ -1,4 +1,5 @@
 const Apartment = require('../models/apartmentModel');
+const User = require('../models/userModel')
 const mongoose = require('mongoose');
 
 // GET all apartments
@@ -15,12 +16,14 @@ const addApartment = async (req, res) => {
     }
 
     const realestate_id = req.user._id.toString();
+    const realestate = await User.findById(realestate_id).select('fullname');
+    const realestate_name = realestate.fullname;
     const check = await Apartment.find({realestate_id, roomnumber});
     if(check.length > 0){
         return res.status(400).json({error: 'This apartment is already registered'});
     }
 
-    const apartment = await Apartment.create({realestate_id, roomnumber, floornumber, blocknumber, bedrooms, bathrooms, furnished, parking, type, price, imageurls, available});
+    const apartment = await Apartment.create({realestate_name, realestate_id, roomnumber, floornumber, blocknumber, bedrooms, bathrooms, furnished, parking, type, price, imageurls, available});
     res.status(200).json(apartment);
     
 }
