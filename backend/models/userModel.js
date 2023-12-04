@@ -21,7 +21,7 @@ const userSchema = new Schema({
         required: true,
     },
     contact: {
-        type: String,
+        type: String
     },
     privilege: {
         type: String,
@@ -32,10 +32,13 @@ const userSchema = new Schema({
         default: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
     },
     address: {
-        type: String,
+        type: String
     },
     description: {
-        type: String,
+        type: String
+    },
+    gender: {
+        type: String
     }
 }, {timestamps: true});
 

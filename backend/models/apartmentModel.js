@@ -4,24 +4,13 @@ const Schema = mongoose.Schema;
 
 const apartmentSchema = new Schema({
     realestate_name: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.String,
+        ref: 'User'
     },
     realestate_id: {
-        type: String,
-        required: true
-    },
-    roomnumber: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
-    },
-    floornumber: {
-        type: Number,
-        required: true
-    },
-    blocknumber: {
-        type: Number,
-        required: true
+        ref: 'User'
     },
     bedrooms: {
         type: Number,
@@ -31,29 +20,25 @@ const apartmentSchema = new Schema({
         type: Number,
         required: true
     },
-    furnished: {
-        type: Boolean,
-        required: true
-    },
-    parking: {
-        type: Boolean,
-        required: true
-    },
     type: {
-        type: String,
+        type: String, // Sell, Rent
         required: true
     },
     price: {
         type: String,
         required: true
     },
+    available: {
+        type: Number,
+        required: true
+    },
     imageurls: {
         type: Array,
     },
-    available: {
-        type: Boolean,
-        default: true
+    discription: {
+        type: String, // Furnished ?, Parking ?
     }
+    
 
 }, {timestamps: true});
 

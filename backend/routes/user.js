@@ -29,7 +29,7 @@ router.post('/admin_signup',requireSuperAuth, userController.signupAdmin);
 router.delete('/remove_admin/:id', requireSuperAuth, userController.deleteAdmin);
 
 // GET all admin route
-router.get('/view_admins', requireSuperAuth, userController.getAdmins)
+router.get('/view_admins', userController.getAdmins)
 
 // admin UPDATE route
 router.patch('/update_admin/:id', requireAdminAuth, userController.updateAdmin);

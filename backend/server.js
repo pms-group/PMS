@@ -20,6 +20,9 @@ app.use((req, res, next) =>{
 app.use('/api/apartments', apartmentRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/user', userRoutes);
+app.use((req, res) => {
+    res.status(404).json({error: 'Page not found'});
+})
 
 // connect to db
 mongoose.connect(process.env.MONGO_URI)

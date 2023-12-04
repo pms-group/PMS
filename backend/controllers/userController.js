@@ -1,4 +1,7 @@
 const User = require('../models/userModel');
+const Apartment = require('../models/apartmentModel');
+const Request = require('../models/requestModel');
+
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
@@ -11,49 +14,78 @@ const createToken = (_id) => {
 // login user
 const loginUser = async (req, res) => {
     const {username, password} = req.body;
+    const emptyFields = [];
 
-    if(!username || !password){
-        return res.status(400).json({error: 'Fill out all blanks'});
+    if(!username){
+        emptyFields.push('username');
+    }
+    if(!password){
+        emptyFields.push('password');
+    }
+
+    if(emptyFields.length > 0){
+        return res.status(400).json({error: 'Fill out all blanks', emptyFields});
     }
 
     const user = await User.findOne({username});
     if(!user){
-        return res.status(400).json({error: 'Incorrect Username'});
+        return res.status(400).json({error: 'Incorrect Username', emptyFields});
     }
 
     const match = await bcrypt.compare(password, user.password);
     if(!match){
-        return res.status(400).json({error: 'Incorrect Password'});
+        return res.status(400).json({error: 'Incorrect Password', emptyFields});
     }
 
     // create token
     const token = createToken(user._id);
-    const fn = user.fullname;
-    const pvg = user.privilege;
+    const fullname = user.fullname;
+    const email = user.email;
+    const contact = user.contact;
+    const address = user.address;
+    const description = user.description;
+    const gender = user.gender;
+    const privilege = user.privilege;
     const _id = user._id;
+    const imageurl = user.imageurl;
 
-    res.status(200).json({fullname: fn, privilege: pvg, _id, token});
+    res.status(200).json({username,fullname, email, contact, address, description, gender, privilege, imageurl, _id, token});
 };
 
 // client signup route
 const signupClient = async (req, res) => {
     const {username, fullname, email, password} = req.body;
 
+    const emptyFields = [];
+
+    if(!username){
+        emptyFields.push('username');
+    }
+    if(!password){
+        emptyFields.push('password');
+    }
+    if(!fullname){
+        emptyFields.push('fullname');
+    }
+    if(!email){
+        emptyFields.push('email');
+    }
+
     // validation
-    if(!username || !fullname || !email || !password){
-        return res.status(400).json({error: 'Fill out all'});
+    if(emptyFields.length > 0){
+        return res.status(400).json({error: 'Fill out all blanks', emptyFields});
     }
     if(!validator.isEmail(email)){
-        return res.status(400).json({error: 'Invalid email format'});
+        return res.status(400).json({error: 'Invalid email format', emptyFields});
     }
     if(!validator.isStrongPassword(password)){
-        return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.'});
+        return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields});
     }
 
     const exists = await User.findOne({username});
     
     if(exists){
-        return res.status(400).json({error: 'Username already in use'});
+        return res.status(400).json({error: 'Username already in use', emptyFields});
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -75,6 +107,11 @@ const updateClient = async (req, res) => {
     if(req.body.email && !validator.isEmail(req.body.email)){
         return res.status(400).json({error: 'Invalid email format'});
     }
+    if(req.body.username){
+        const check = await User.findOne({username: req.body.username});
+        if(check && check.id !== id){
+            return res.status(400).json({error: 'This username is taken'});        }
+    }
     if(req.body.password){
         if(!validator.isStrongPassword(req.body.password)){
             return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.'});
@@ -87,7 +124,7 @@ const updateClient = async (req, res) => {
     if(id !== req.user._id.toString()){
         return res.status(400).json({error: 'You can only update your own'});
     }
-
+    
     const client = await User.findByIdAndUpdate(id, req.body);
     if(!client){
         return res.status(400).json({error: 'No client found'});
@@ -108,6 +145,11 @@ const updateSuper = async (req, res) => {
 
     if(req.body.email && !validator.isEmail(req.body.email)){
         return res.status(400).json({error: 'Invalid email format'});
+    }
+    if(req.body.username){
+        const check = await User.findOne({username: req.body.username});
+        if(check && check.id !== id){
+            return res.status(400).json({error: 'This username is taken'});        }
     }
     if(req.body.password){
         if(!validator.isStrongPassword(req.body.password)){
@@ -135,29 +177,55 @@ const updateSuper = async (req, res) => {
 
 // admin signup route
 const signupAdmin = async (req, res) => {
-    const {username, fullname, email, password, privilege='admin'} = req.body;
+    const {username, fullname, email, contact, password, privilege='admin'} = req.body;
+    const emptyFields = [];
+    if(!username){
+        emptyFields.push('username');
+    }
+    if(!fullname){
+        emptyFields.push('fullname');
+    }
+    if(!contact){
+        emptyFields.push('contact');
+    }
+    if(!email){
+        emptyFields.push('email');
+    }
+    if(!password){
+        emptyFields.push('password');
+    }
 
     // validation
-    if(!username || !fullname || !email || !password){
-        return res.status(400).json({error: 'Fill out all'});
+    if(emptyFields.length > 0){
+        return res.status(400).json({error: 'Fill out all', emptyFields});
     }
     if(!validator.isEmail(email)){
-        return res.status(400).json({error: 'Invalid email format'});
+        return res.status(400).json({error: 'Invalid email format', emptyFields});
     }
     if(!validator.isStrongPassword(password)){
-        return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.'});
+        return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields});
     }
 
     const exists = await User.findOne({username});
     
     if(exists){
-        return res.status(400).json({error: 'Username already in use'});
+        return res.status(400).json({error: 'Username already in use', emptyFields});
+    }
+    const exists1 = await User.findOne({contact});
+    
+    if(exists1){
+        return res.status(400).json({error: 'Phone Number already in use', emptyFields});
+    }
+    const exists2 = await User.findOne({fullname, privilege: 'admin'});
+    
+    if(exists2){
+        return res.status(400).json({error: 'RealEstate name already in use', emptyFields});
     }
 
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
 
-    const admin = await User.create({username, fullname, email, password: hash, privilege});
+    const admin = await User.create({username, fullname, contact, email, password: hash, privilege});
 
     const fn = admin.fullname;
     const pvg = admin.privilege;
@@ -181,11 +249,13 @@ const deleteAdmin = async (req, res) => {
     if(!admin){
         return res.status(400).json({error: 'No admin found'});
     }
-
+    const apartment = await Apartment.deleteMany({realestate_id: id});
+    const request = await Request.updateMany({realestate_id: id}, {realestate_name: 'Sorry, This Apartment has been removed', status: 'pending'});
+    
     const fn = admin.fullname;
     const pvg = admin.privilege;
 
-    res.status(200).json({fullname: fn, privilege: pvg});
+    res.status(200).json({fullname: fn, privilege: pvg}, apartment, request);
 }
 
 // get admin route
@@ -205,6 +275,11 @@ const updateAdmin = async (req, res) => {
 
     if(req.body.email && !validator.isEmail(req.body.email)){
         return res.status(400).json({error: 'Invalid email format'});
+    }
+    if(req.body.username){
+        const check = await User.findOne({username: req.body.username});
+        if(check && check.id !== id){
+            return res.status(400).json({error: 'This username is taken'});        }
     }
     if(req.body.password){
         if(!validator.isStrongPassword(req.body.password)){
