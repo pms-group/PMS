@@ -25,6 +25,7 @@ const Signup = () => {
         if(password !== confirmpassword){
             setError('Passwords did not match. Please insert correctly');
             setIsLoading(false);
+            setEmptyFields([]);
             return;
         }
 
@@ -41,7 +42,6 @@ const Signup = () => {
             setEmptyFields(json.emptyFields)
         }
         if(response.ok){
-            // update loading state
             setIsLoading(false);
             setEmptyFields([])
             navigate('/login');

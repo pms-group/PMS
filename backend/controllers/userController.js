@@ -1,7 +1,9 @@
 const User = require('../models/userModel');
 const Apartment = require('../models/apartmentModel');
 const Request = require('../models/requestModel');
+const upload = require('../middleware/uploadImage')
 
+const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
@@ -49,7 +51,7 @@ const loginUser = async (req, res) => {
     const _id = user._id;
     const imageurl = user.imageurl;
 
-    res.status(200).json({username,fullname, email, contact, address, description, gender, privilege, imageurl, _id, token});
+    res.status(200).json({username, fullname, email, contact, address, description, gender, privilege, imageurl, _id, token});
 };
 
 // client signup route
@@ -88,6 +90,12 @@ const signupClient = async (req, res) => {
         return res.status(400).json({error: 'Username already in use', emptyFields});
     }
 
+    const exists1 = await User.findOne({email});
+    
+    if(exists1){
+        return res.status(400).json({error: 'Email already in use', emptyFields});
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
     const client = await User.create({username, fullname, email, password: hash});
@@ -97,82 +105,112 @@ const signupClient = async (req, res) => {
     res.status(200).json({fullname: fn, privilege: pvg});
 };
 
-// client update route
-const updateClient = async (req, res) => {
-    const id = req.params.id;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(400).json({error: 'Invalid ID'});
-    }
-
-    if(req.body.email && !validator.isEmail(req.body.email)){
-        return res.status(400).json({error: 'Invalid email format'});
-    }
-    if(req.body.username){
-        const check = await User.findOne({username: req.body.username});
-        if(check && check.id !== id){
-            return res.status(400).json({error: 'This username is taken'});        }
-    }
-    if(req.body.password){
-        if(!validator.isStrongPassword(req.body.password)){
-            return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.'});
+// update profile route
+const updateProfile = async (req, res) => {
+    upload.single('image')(req, res, async err => {
+        if(err){
+            return res.status(400).json({error: err.message});
         }
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(req.body.password, salt);
-        req.body.password = hash;
-    }
+        const {username, fullname, email, contact, address, description, gender, changePWD, oldPWD, newPWD, removePic} = req.body;
+        const emptyFields = [];
 
-    if(id !== req.user._id.toString()){
-        return res.status(400).json({error: 'You can only update your own'});
-    }
-    
-    const client = await User.findByIdAndUpdate(id, req.body);
-    if(!client){
-        return res.status(400).json({error: 'No client found'});
-    }
-
-    const fn = client.fullname;
-    const pvg = client.privilege;
-
-    res.status(200).json({fullname: fn, privilege: pvg});
-};
-
-// superadmin update route
-const updateSuper = async (req, res) => {
-    const id = req.params.id;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(400).json({error: 'Invalid ID'});
-    }
-
-    if(req.body.email && !validator.isEmail(req.body.email)){
-        return res.status(400).json({error: 'Invalid email format'});
-    }
-    if(req.body.username){
-        const check = await User.findOne({username: req.body.username});
-        if(check && check.id !== id){
-            return res.status(400).json({error: 'This username is taken'});        }
-    }
-    if(req.body.password){
-        if(!validator.isStrongPassword(req.body.password)){
-            return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.'});
+        if(!username){
+            emptyFields.push('username');
         }
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(req.body.password, salt);
-        req.body.password = hash;
-    }
+        if(!fullname){
+            emptyFields.push('fullname');
+        }
+        if(!email){
+            emptyFields.push('email');
+        }
+        if(!contact){
+            emptyFields.push('contact');
+        }
+        if(!gender){
+            emptyFields.push('gender');
+        }
+        if(changePWD){
+            if(!oldPWD){
+                emptyFields.push('oldPWD');
+            }
+            if(!newPWD){
+                emptyFields.push('newPWD');
+            }
+        }
 
-    if(id !== req.user._id.toString()){
-        return res.status(400).json({error: 'You can only update your own'});
-    }
+        // validation
+        if(emptyFields.length > 0){
+            return res.status(400).json({error: 'Fill out all blanks', emptyFields});
+        }
+        if(!validator.isEmail(email)){
+            return res.status(400).json({error: 'Invalid email format', emptyFields});
+        }
+        if(newPWD && !validator.isStrongPassword(newPWD)){
+            return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields});
+        }
 
-    const superadmin = await User.findByIdAndUpdate(id, req.body);
-    if(!superadmin){
-        return res.status(400).json({error: 'No superadmin found'});
-    }
+        const exists = await User.findOne({username});
+        
+        if(exists && exists._id.toString() !== req.user._id.toString()){
+            return res.status(400).json({error: 'Username already in use', emptyFields});
+        }
 
-    const fn = superadmin.fullname;
-    const pvg = superadmin.privilege;
+        const exists1 = await User.findOne({email});
+        
+        if(exists1 && exists1._id.toString() !== req.user._id.toString()){
+            return res.status(400).json({error: 'Email already in use', emptyFields});
+        }
 
-    res.status(200).json({fullname: fn, privilege: pvg});
+        const exists2 = await User.findOne({contact});
+        
+        if(exists2 && exists2._id.toString() !== req.user._id.toString()){
+            return res.status(400).json({error: 'Phone Number already in use', emptyFields});
+        }
+
+        const exists3 = await User.findOne({fullname, privilege: 'admin'});
+        
+        if(exists3 && req.user.privilege === 'admin' && exists3._id.toString() !== req.user._id.toString()){
+            return res.status(400).json({error: 'RealEstate name already in use', emptyFields});
+        }
+
+        let hash;
+        if(changePWD){
+            const user = await User.findById(req.user._id).select('password');
+
+            const match = await bcrypt.compare(oldPWD, user.password);
+            if(!match){
+                return res.status(400).json({error: 'Incorrect Password', emptyFields});
+            }
+            const salt = await bcrypt.genSalt(10);
+            hash = await bcrypt.hash(newPWD, salt);
+        }
+
+        let imageUrl;
+        if(req.file){
+            imageUrl = req.file.path
+        }
+        if(removePic){
+            imageUrl = '';
+        }
+        const updatedUser = await User.findByIdAndUpdate(req.user._id, {username, fullname, email, contact, address, description, gender, password: hash, imageUrl });
+        const oldImageUrl = updatedUser.imageUrl;
+        if(oldImageUrl && (removePic || imageUrl) && fs.existsSync(oldImageUrl)){
+            fs.unlink(oldImageUrl, err => {
+                if(err){
+                    console.log(`Error deleting Image: ${err}`);
+                } else{
+                    console.log('Image deleted successfully');
+                }
+            });
+        } else{
+            console.log('No Image Deleted');
+        }
+
+        const fn = updatedUser.fullname;
+        const pvg = updatedUser.privilege;
+
+        res.status(200).json({fullname: fn, privilege: pvg});
+    });
 }
 
 // admin signup route
@@ -249,13 +287,48 @@ const deleteAdmin = async (req, res) => {
     if(!admin){
         return res.status(400).json({error: 'No admin found'});
     }
-    const apartment = await Apartment.deleteMany({realestate_id: id});
+
+    let apartments = await Apartment.find({realestate_id: id}).select('imageUrls');
+    if(apartments && apartments.length > 0){
+        apartments.forEach(apartment => {
+            const imageUrls = apartment.imageUrls;
+            if(imageUrls && imageUrls > 0){
+                imageUrls.forEach(imageUrl => {
+                    if(fs.existsSync(imageUrl)){
+                        fs.unlink(imageUrl, err => {
+                            if(err){
+                                console.log(`Error deleting Image: ${err}`);
+                            } else{
+                                console.log('Image deleted successfully');
+                            }
+                        });
+                    }
+                });
+            } else{
+                console.log('No Image Deleted');
+            }
+        });
+    }
+
+    apartments = await Apartment.deleteMany({realestate_id: id});
     const request = await Request.updateMany({realestate_id: id}, {realestate_name: 'Sorry, This Apartment has been removed', status: 'pending'});
     
+    if(admin.imageUrl && fs.existsSync(admin.imageUrl)){
+        fs.unlink(admin.imageUrl, err => {
+            if(err){
+                console.log(`Error deleting Image: ${err}`);
+            } else{
+                console.log('Image deleted successfully');
+            }
+        });
+    } else{
+        console.log('No Image Deleted');
+    }
+
     const fn = admin.fullname;
     const pvg = admin.privilege;
 
-    res.status(200).json({fullname: fn, privilege: pvg}, apartment, request);
+    res.status(200).json({fullname: fn, privilege: pvg}, apartments, request);
 }
 
 // get admin route
@@ -266,44 +339,4 @@ const getAdmins = async (req, res) => {
     res.status(200).json(admins);
 }
 
-// admin update route
-const updateAdmin = async (req, res) => {
-    const id = req.params.id;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(400).json({error: 'Invalid ID'});
-    }
-
-    if(req.body.email && !validator.isEmail(req.body.email)){
-        return res.status(400).json({error: 'Invalid email format'});
-    }
-    if(req.body.username){
-        const check = await User.findOne({username: req.body.username});
-        if(check && check.id !== id){
-            return res.status(400).json({error: 'This username is taken'});        }
-    }
-    if(req.body.password){
-        if(!validator.isStrongPassword(req.body.password)){
-            return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.'});
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(req.body.password, salt);
-        req.body.password = hash;
-    }
-    if(id !== req.user._id.toString()){
-        return res.status(400).json({error: 'You can only update your own'});
-    }
-
-    const admin = await User.findByIdAndUpdate(id, req.body);
-    if(!admin){
-        return res.status(400).json({error: 'No admin found'});
-    }
-
-    const fn = admin.fullname;
-    const pvg = admin.privilege;
-
-    res.status(200).json({fullname: fn, privilege: pvg});
-}
-
-
-
-module.exports = { loginUser, signupClient, updateClient, updateSuper, signupAdmin, deleteAdmin, getAdmins, updateAdmin };
+module.exports = { loginUser, signupClient, updateProfile, signupAdmin, deleteAdmin, getAdmins };

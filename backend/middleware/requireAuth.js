@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
-const requireClientAuth = async (req, res, next) => {
+const requireAuth = async (req, res, next) => {
     
     // verify authentication
     const {authorization} = req.headers;
@@ -16,11 +16,6 @@ const requireClientAuth = async (req, res, next) => {
         const {_id} = jwt.verify(token, process.env.SECRET);
         
         req.user = await User.findOne({_id}).select('privilege');
-        req.user._id = _id;
-
-        if(req.user.privilege !== 'user'){
-            return res.status(401).json({error: 'Unauthorized privilege'});
-        }
         next();
 
     } catch(error){
@@ -29,4 +24,4 @@ const requireClientAuth = async (req, res, next) => {
     }
 }
 
-module.exports = requireClientAuth;
+module.exports = requireAuth;

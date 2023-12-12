@@ -32,10 +32,10 @@ const apartmentSchema = new Schema({
         type: Number,
         required: true
     },
-    imageurls: {
+    imageUrls: {
         type: Array,
     },
-    discription: {
+    description: {
         type: String, // Furnished ?, Parking ?
     }
     

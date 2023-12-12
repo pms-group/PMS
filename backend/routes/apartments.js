@@ -14,10 +14,10 @@ router.get('/', apartmentController.getApartments);
 // GET one realestates apartments. The id is the admin's
 router.get('/realestate_apartments',requireAdminAuth, apartmentController.getAdminApartments);
 
-// add apartment
+// add apartment, image uploader is used in the controller
 router.post('/', requireAdminAuth, apartmentController.addApartment);
 
-// UPDATE apartment. The id is the apartment's
+// UPDATE apartment. The id is the apartment's, image uploader is used in the controller
 router.patch('/:id', requireAdminAuth, apartmentController.updateApartment);
 
 // DELETE apartment. The id is the apartment's

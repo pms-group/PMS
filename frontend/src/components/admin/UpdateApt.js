@@ -5,62 +5,95 @@ const UpdateApt = ({apt}) => {
     const {dispatch} = useAptContext();
     const {user} = useAuthContext();
 
-    const [bedrooms, setBedrooms] = useState(apt.bedrooms);
-    const [bathrooms, setBathrooms] = useState(apt.bathrooms);
-    const [type, setType] = useState(apt.type);
-    const [price, setPrice] = useState(apt.price);
-    const [available, setAvailable] = useState(apt.available);
-    const [discription, setDiscription] = useState(apt.discription);
+    const [formData, setFormData] = useState({
+        bedrooms: '',
+        bathrooms: '',
+        type: 'Sell',
+        price: '',
+        available: '',
+        description: '',
+        images: []
+    });
+
+    const handleInputChange = (e) => {
+        const { name, value, files } = e.target;
+    
+        setFormData((prevData) => ({
+          ...prevData,
+          [name]: files || value,
+        }));
+      };
 
     const [error, setError] = useState(null);
     const [emptyFields, setEmptyFields] = useState([]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const apartment = { bedrooms, bathrooms, type, price, available, discription};
+        setError(null);
+        setEmptyFields([]);
 
-        const response = await fetch(`/api/apartments/${apt._id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(apartment),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${user.token}`
+        const {images} = formData;
+        const data = new FormData();
+        Array.from(images).forEach((image) => data.append('images', image))
+        for(let key in formData){
+            if(key === 'images'){
+                continue;
             }
-        });
-        const json = await response.json();
-
-        if(!response.ok){
-            setError(json.error);
-            setEmptyFields(json.emptyFields);
+            data.append(key, formData[key]);
         }
-        if(response.ok){
-            
-            const update = await fetch('/api/apartments');
-            const json = await update.json();
 
-            if(update.ok){
-                dispatch({type: 'SET_APARTMENTS', payload: json})
+        try {
+            const response = await fetch(`/api/apartments/${apt._id}`, {
+                method: 'PATCH',
+                body: data,
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+            const json = await response.json();
+    
+            if(!response.ok){
+                setError(json.error);
+                setEmptyFields(json.emptyFields);
             }
-
-            setError(null);
-            setBathrooms(bathrooms);
-            setBedrooms(bedrooms);
-            setType(type);
-            setPrice(price);
-            setAvailable(available);
-            setDiscription(discription);
+            if(response.ok){
+                
+                const update = await fetch('/api/apartments');
+                const json = await update.json();
+    
+                if(update.ok){
+                    dispatch({type: 'SET_APARTMENTS', payload: json});
+                    setError(null);
+                    setFormData({
+                        bedrooms: '',
+                        bathrooms: '',
+                        type: 'Sell',
+                        price: '',
+                        available: '',
+                        description: '',
+                        images: []
+                    });
+                    setEmptyFields([]);
+                }
+            } 
+        } catch (error) {
+            setError('An unexpected error occurred during the upload.');
             setEmptyFields([]);
         }
+        
     }
 
     const handleReset = () => {
         setError(null);
-        setBathrooms(apt.bathrooms);
-        setBedrooms(apt.bedrooms);
-        setType(apt.type);
-        setPrice(apt.price);
-        setAvailable(apt.available);
-        setDiscription(apt.discription);
+        setFormData({
+            bedrooms: '',
+            bathrooms: '',
+            type: 'Sell',
+            price: '',
+            available: '',
+            description: '',
+            images: []
+        });
         setEmptyFields([]);
     }
 
@@ -79,8 +112,9 @@ const UpdateApt = ({apt}) => {
             <label>Bed rooms:</label>
             <input
                 type="number"
-                onChange={e => setBedrooms(e.target.value)}
-                value={bedrooms}
+                name="bedrooms"
+                onChange={handleInputChange}
+                value={formData.bedrooms}
                 className={emptyFields.includes('bedrooms') ? 'error' : ''}
                 min={0}
             />
@@ -88,16 +122,18 @@ const UpdateApt = ({apt}) => {
             <label>Bath rooms:</label>
             <input
                 type="number"
-                onChange={e => setBathrooms(e.target.value)}
-                value={bathrooms}
+                name="bathrooms"
+                onChange={handleInputChange}
+                value={formData.bathrooms}
                 className={emptyFields.includes('bathrooms') ? 'error' : ''}
                 min={1}
             />
 
             <label>Type: </label>
             <select
-                value={type}
-                onChange={e => setType(e.target.value)}
+                name="type"
+                onChange={handleInputChange}
+                value={formData.type}
             >
                 <option value="Sell">Sell</option>
                 <option value="Rent">Rent</option>
@@ -106,8 +142,9 @@ const UpdateApt = ({apt}) => {
             <label>Price:</label>
             <input
                 type="number"
-                onChange={e => setPrice(e.target.value)}
-                value={price}
+                name="price"
+                onChange={handleInputChange}
+                value={formData.price}
                 className={emptyFields.includes('price') ? 'error' : ''}
                 min={1}
             />
@@ -115,16 +152,27 @@ const UpdateApt = ({apt}) => {
             <label>Available:</label>
             <input
                 type="number"
-                onChange={e => setAvailable(e.target.value)}
-                value={available}
+                name="available"
+                onChange={handleInputChange}
+                value={formData.available}
                 className={emptyFields.includes('available') ? 'error' : ''}
                 min={1}
             />
 
-            <label>Discription(optional):</label>
+            <label>Description(optional):</label>
             <textarea
-                value={discription}
-                onChange={e => setDiscription(e.target.value)}
+                name="description"
+                onChange={handleInputChange}
+                value={formData.description}
+            />
+
+            <label>Images(5 images only with size limit of 2MB for each)</label>
+            <input
+                type="file"
+                accept=".png, .jpg, .jpeg"
+                multiple
+                name="images"
+                onChange={handleInputChange}
             />
 
             <input className="submit" type="submit" value="Update Apartment"/>

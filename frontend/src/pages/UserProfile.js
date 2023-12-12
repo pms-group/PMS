@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 // contexts
 import { useAuthContext } from '../hooks/useContexts';
 
@@ -22,6 +20,8 @@ const UserProfile = () => {
                 <p>Gender: <strong>{user.gender}</strong></p>
                 <p>Bio: <strong>{user.description}</strong></p>
             </div>}
+
+            {user && <UpdateProfile />}
 
 
         </div>
