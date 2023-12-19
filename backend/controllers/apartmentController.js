@@ -1,4 +1,5 @@
 const Apartment = require('../models/apartmentModel');
+const Request = require('../models/requestModel');
 const User = require('../models/userModel');
 const mongoose = require('mongoose');
 const upload = require('../middleware/uploadImage');
@@ -18,7 +19,7 @@ const getApartments = async (req, res) => {
     res.status(200).json(result);
 }
 
-// GET one realestates apartments
+// GET one realestate's apartments
 const getAdminApartments = async (req, res) => {
     const _id = req.user._id.toString();
     const apartments = await Apartment.find({realestate_id: _id}).sort({createdAt: -1});
@@ -35,37 +36,19 @@ const getAdminApartments = async (req, res) => {
 const addApartment = async (req, res) => {
     upload.array('images', 5)(req, res, async err => {
         if(err){
-            return res.status(400).json({error: err.message});
+            return res.status(400).json({error: err.message, emptyFields: []});
         }
         const {bedrooms, bathrooms, type, price, available, description} = req.body;
         let emptyFields = [];
-
-        if(!bedrooms){
-            emptyFields.push('bedrooms')
-        }
-        if(!bathrooms){
-            emptyFields.push('bathrooms')
-        }
-        if(!type){
-            emptyFields.push('type')
-        }
-        if(!price){
-            emptyFields.push('price')
-        }
-        if(!available){
-            emptyFields.push('available')
-        }
+        emptyFields = checkEmptyFields({bedrooms, bathrooms, type, price, available});
         
         if(emptyFields.length > 0){
+            req.files.length > 0 && req.files.forEach(deleteImages);
             return res.status(400).json({error: 'Fill out all', emptyFields});
         }
 
-        let imageUrls;
-        if(req.files.length > 0){
-            req.files.forEach((file) => {
-                imageUrls.push(file.path)
-            });
-        }
+        let imageUrls = [];
+        req.files.length > 0 && req.files.forEach(file => imageUrls.push(file.path));
 
         const realestate_id = req.user._id;
         
@@ -79,33 +62,19 @@ const addApartment = async (req, res) => {
 const updateApartment = async (req, res) => {
     upload.array('images', 5)(req, res, async err => {
         if(err){
-            return res.status(400).json({error: err.message});
+            return res.status(400).json({error: err.message, emptyFields: []});
         }
         const _id = req.params.id;
         if(!mongoose.Types.ObjectId.isValid(_id)){
-            return res.status(400).json({error: 'Invalid ID'});
+            return res.status(400).json({error: 'Invalid ID', emptyFields: []});
         }
 
         const {bedrooms, bathrooms, type, price, available, description, removePics} = req.body;
-        let emptyFields = [];
+        let emptyFields = []; 
+        emptyFields = checkEmptyFields({bedrooms, bathrooms, type, price, available});
 
-        if(!bedrooms){
-            emptyFields.push('bedrooms')
-        }
-        if(!bathrooms){
-            emptyFields.push('bathrooms')
-        }
-        if(!type){
-            emptyFields.push('type')
-        }
-        if(!price){
-            emptyFields.push('price')
-        }
-        if(!available){
-            emptyFields.push('available')
-        }
-        
         if(emptyFields.length > 0){
+            req.files.length > 0 && req.files.forEach(deleteImages);
             return res.status(400).json({error: 'Fill out all', emptyFields});
         }
 
@@ -113,26 +82,18 @@ const updateApartment = async (req, res) => {
 
         const check = await Apartment.findById(_id);
         if(!check){
-            return res.status(400).json({error: 'No Apartment found with this ID'});
+            req.files.length > 0 && req.files.forEach(deleteImages);
+            return res.status(400).json({error: 'No Apartment found with this ID', emptyFields});
         }
         if(check && realestate_id.toString() !== check.realestate_id.toString()){
+            req.files.length > 0 && req.files.forEach(deleteImages);
             return res.status(400).json({error: 'You are only allowed to update apartments of your own RealEstate', emptyFields});
         }
 
         let imageUrls = check.imageUrls;
-        if(removePics){
+        if(removePics.toString() === 'true'){
             if(imageUrls && imageUrls.length > 0){
-                imageUrls.forEach(imageUrl => {
-                    if(fs.existsSync(imageUrl)){
-                        fs.unlink(imageUrl, err => {
-                            if(err){
-                                console.log(`Error deleting Image: ${err}`);
-                            } else{
-                                console.log('Image deleted successfully');
-                            }
-                        });
-                    }
-                })
+                imageUrls.forEach(deleteImages)
             } else{
                 console.log('No Image Deleted');
             }
@@ -142,20 +103,10 @@ const updateApartment = async (req, res) => {
             const remaining = 5 - imageUrls.length;
             if(req.files.length > remaining){
                 const rmImages = imageUrls.slice(5-req.files.length);
-                rmImages.forEach(rmImage => {
-                    if(fs.existsSync(rmImage, err => {
-                        if(err){
-                            console.log(`Error deleting Image: ${err}`);
-                        } else{
-                            console.log('Image deleted successfully');
-                        }
-                    }));
-                });
+                rmImages.forEach(deleteImages);
                 imageUrls = imageUrls.slice(0, (5-req.files.length));
             }
-            req.files.forEach((file) => {
-                imageUrls.push(file.path);
-            });
+            req.files.forEach((file) => imageUrls.push(file.path));
         }
 
         const apartment = await Apartment.findByIdAndUpdate(_id, {bedrooms, bathrooms, type, price, available, imageUrls, description});
@@ -180,21 +131,33 @@ const deleteApartment = async (req, res) => {
     const apartment = await Apartment.findByIdAndDelete(id);
 
     if(apartment.imageUrls && apartment.imageUrls.length > 0){
-        apartment.imageUrls.forEach(imageUrl => {
-            if(fs.existsSync(imageUrl)){
-                fs.unlink(imageUrl, err => {
-                    if(err){
-                        console.log(`Error deleting Image: ${err}`);
-                    } else{
-                        console.log('Image deleted successfully');
-                    }
-                });
-            }
-        })
-    } else{
-        console.log('No Image Deleted');
+        apartment.imageUrls.forEach(deleteImages)
     }
+
+    await Request.updateMany({apartment_id: id}, {
+        realestate_name: 'Sorry, This Apartment has been removed', 
+        status: 'pending'
+    });
+
     res.status(200).json(apartment);
+}
+
+// commonly used functions
+const checkEmptyFields = elements => {
+    let emptyFields = []
+    for(let key in elements){
+        const value = elements[key];
+        !value && emptyFields.push(key);
+    }
+    return emptyFields;
+}
+const imageDeleteError = err => {
+    err ? console.log(`Error deleting Image: ${err}`) : console.log('Image deleted successfully');
+}
+const deleteImages = image => {
+    if(fs.existsSync(image)){
+        fs.unlink(image, imageDeleteError);
+    }
 }
 
 module.exports = {

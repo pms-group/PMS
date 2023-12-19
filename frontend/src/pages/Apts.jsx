@@ -1,18 +1,15 @@
-import { useEffect } from "react";
-
 import { useNavigate } from 'react-router-dom';
-
 
 // contexts
 import { useAuthContext, useAptContext } from '../hooks/useContexts';
 
 // components
-import AptDetails from '../components/AptDetails'
-import AddApt from '../components/admin/AddApt';
-import AddRealEstate from '../components/superadmin/AddRealEstate';
+import AptInfo from '../components/public/AptInfo'
+import AddApt from '../components/private/admin/AddApt';
+import AddRealEstate from '../components/private/superadmin/AddRealEstate';
 
 
-const Home = () => {
+export default function Apts(){
     const navigate = useNavigate();
 
     const handleClick = (id) => {
@@ -20,19 +17,8 @@ const Home = () => {
     };
 
 
-    const {apts, dispatch} = useAptContext();
+    const {apts} = useAptContext();
     const {user} = useAuthContext();
-    useEffect(() => {
-        const fetchApartments = async () => {
-            const response = await fetch('/api/apartments');
-            const json = await response.json();
-            if(response.ok){
-                dispatch({type: 'SET_APARTMENTS', payload: json});
-            }
-        };
-
-        fetchApartments();
-    }, [dispatch])
 
     return ( 
         <div className={(user && (user.privilege === 'admin' || user.privilege === 'superadmin')) ? 'home': 'home1'}>
@@ -41,7 +27,7 @@ const Home = () => {
                 <h2>Apartments</h2>
                 {apts && apts.map( apt => (
                     <div onClick={() => handleClick(apt._id)} key={apt._id} className="links">
-                        <AptDetails key={apt._id} apt={apt}/>
+                        <AptInfo key={apt._id} apt={apt}/>
                     </div>
                 ))}
             </div>
@@ -51,5 +37,3 @@ const Home = () => {
         </div>
      );
 }
- 
-export default Home;

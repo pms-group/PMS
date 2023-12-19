@@ -1,27 +1,39 @@
 import { useState } from "react";
-import { useRequestContext, useAuthContext } from "../../hooks/useContexts";
+import { useRequestContext, useAuthContext } from "../../../hooks/useContexts";
 
-const RespondRequest = () => {
+export default function RespondRequest(){
     const {dispatch} = useRequestContext();
     const {user} = useAuthContext();
 
-    const [reply_message, setReply_message] = useState('');
-    const [status, setStatus] = useState('accepted');
-    const [id, setId] = useState('');
+    const [formData, setFormData] = useState({
+        reply_message: '',
+        status: 'accepted',
+        id: ''
+    });
+
     const [error, setError] = useState(null);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const request = { reply_message, status };
-        if (id === ''){
+        if (formData.id === ''){
             setError('Please enter the Request ID');
-        } else{
-            const response = await fetch(`/api/requests/realestate_requests/${id}`, {
+            return;
+        }
+
+        const data = JSON.stringify({...formData});
+
+        try {
+            const response = await fetch(`/api/requests/realestate_requests/${formData.id}`, {
                 method: 'PATCH',
-                body: JSON.stringify(request),
+                body: data,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.token}`
+                    'Authorization': `Bearer ${user.token}`,
+                    'Content-Type': 'application/json'
                 }
             });
             const res = await response.json();
@@ -31,9 +43,11 @@ const RespondRequest = () => {
             }
             if(response.ok){
                 setError(null);
-                setReply_message('');
-                setStatus('accepted');
-                setId('');
+                setFormData({
+                    reply_message: '',
+                    status: 'accepted',
+                    id: ''
+                });
     
                 const update = await fetch('/api/requests/realestate_requests', {
                     headers: {
@@ -46,16 +60,20 @@ const RespondRequest = () => {
                     dispatch({type: 'SET_REQUESTS', payload: json})
                 }
             }
+        } catch (error) {
+            setError(error);
         }
     }
 
-    const handleReset = () => {
+    const handleReset = (e) => {
+        e.preventDefault();
         setError(null);
-        setReply_message('');
-        setStatus('accepted');
-        setId('');
+        setFormData({
+            reply_message: '',
+            status: 'accepted',
+            id: ''
+        })
     }
-
 
     return ( 
         <form className="other-forms" onSubmit={handleSubmit} onReset={handleReset}>
@@ -64,18 +82,24 @@ const RespondRequest = () => {
             <label>Request ID:</label>
             <input
                 type="text"
-                onChange={e => setId(e.target.value)}
-                value={id}
+                name="id"
+                onChange={handleInputChange}
+                value={formData.id}
             />
 
             <label>Reply Message:</label>
             <textarea
-                value={reply_message}
-                onChange={e => setReply_message(e.target.value)}
+                name="reply_message"
+                onChange={handleInputChange}
+                value={formData.reply_message}
             />
 
             <label>Status: </label>
-            <select value={status} onChange={e => setStatus(e.target.value)}>
+            <select
+                name="status"
+                onChange={handleInputChange}
+                value={formData.status}
+            >
                 <option value="accepted">accepted</option>
                 <option value="rejected">rejected</option>
             </select><br /><br />
@@ -86,5 +110,3 @@ const RespondRequest = () => {
         </form>
      );
 }
- 
-export default RespondRequest;

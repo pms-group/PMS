@@ -8,10 +8,9 @@ const getRequests = async (req, res) => {
     const requests = await Request.find().sort({createdAt: -1});
     const result = await Promise.all(
         requests.map(async request => {
-            const realestate_name = await User.findById(request.realestate_id);
-            if(realestate_name){
-                request.realestate_name = realestate_name.fullname;
-            }
+            const apartment = await Apartment.findById(request.apartment_id);
+            const realestate = await User.findById(request.realestate_id);
+            request.realestate_name = apartment ? realestate.fullname : request.realestate_name;
             const client_name = (await User.findById(request.client_id)).fullname;
             request.client_name = client_name;
             return request;
@@ -26,9 +25,10 @@ const getRealEstateRequests = async (req, res) => {
     const requests = await Request.find({realestate_id: _id}).sort({createdAt: -1});
     const result = await Promise.all(
         requests.map(async request => {
+            const apartment = await Apartment.findById(request.apartment_id);
             const realestate_name = (await User.findById(request.realestate_id)).fullname;
             const client_name = (await User.findById(request.client_id)).fullname;
-            request.realestate_name = realestate_name;
+            request.realestate_name = apartment ? realestate_name : request.realestate_name;
             request.client_name = client_name;
             return request;
         })
@@ -42,9 +42,10 @@ const getClientRequests = async (req, res) => {
     const requests = await Request.find({client_id: _id}).sort({createdAt: -1});
     const result = await Promise.all(
         requests.map(async request => {
-            const realestate_name = (await User.findById(request.realestate_id)).fullname;
+            const apartment = await Apartment.findById(request.apartment_id);
+            const realestate = (await User.findById(request.realestate_id));
             const client_name = (await User.findById(request.client_id)).fullname;
-            request.realestate_name = realestate_name;
+            request.realestate_name = (apartment && realestate) ? realestate.fullname : request.realestate_name;
             request.client_name = client_name;
             return request;
         })

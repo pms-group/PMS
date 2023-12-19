@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAptContext, useAuthContext } from "../../hooks/useContexts";
+import { useAptContext, useAuthContext } from "../../../hooks/useContexts";
 
-const AddApt = () => {
+export default function AddApt(){
     const {dispatch} = useAptContext();
     const {user} = useAuthContext();
 
@@ -15,17 +15,16 @@ const AddApt = () => {
         images: []
     });
 
+    const [error, setError] = useState(null);
+    const [emptyFields, setEmptyFields] = useState([]);
+
     const handleInputChange = (e) => {
         const { name, value, files } = e.target;
-    
         setFormData((prevData) => ({
           ...prevData,
           [name]: files || value,
         }));
       };
-
-    const [error, setError] = useState(null);
-    const [emptyFields, setEmptyFields] = useState([]);
     
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -68,16 +67,17 @@ const AddApt = () => {
                     images: []
                 });
                 setEmptyFields([]);
-                dispatch({type: 'CREATE_APARTMENT', payload: json})
+                dispatch({type: 'CREATE_APARTMENT', payload: json});
             }
         } catch (error) {
-            setError('An unexpected error occurred during the upload.');
+            setError(error.message);
             setEmptyFields([]);
         }
         
     }
 
-    const handleReset = () => {
+    const handleReset = (e) => {
+        e.preventDefault()
         setError(null);
         setFormData({
             bedrooms: '',
@@ -167,5 +167,3 @@ const AddApt = () => {
         </form>
      );
 }
- 
-export default AddApt;

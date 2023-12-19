@@ -1,4 +1,4 @@
-import { createContext, useReducer } from "react";
+import { createContext, useReducer, useEffect } from "react";
 
 export const AptContext = createContext();
 
@@ -31,6 +31,17 @@ export const AptContextProvider = ({children}) => {
         apts: null
     });
 
+    useEffect(() => {
+        const fetchApartments = async () => {
+            const response = await fetch('/api/apartments');
+            const json = await response.json();
+            if(response.ok){
+                dispatch({type: 'SET_APARTMENTS', payload: json});
+            }
+        };
+
+        fetchApartments();
+    }, [dispatch])
 
     return(
         <AptContext.Provider value={{...state, dispatch}}>

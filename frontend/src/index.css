@@ -39,6 +39,12 @@ nav {
 }
 nav a {
   margin: 10px;
+  display: flex;
+  align-items: center;
+}
+nav div {
+  display: flex;
+  align-items: center;
 }
 nav button {
   background: #fff;
@@ -50,6 +56,14 @@ nav button {
   cursor: pointer;
   font-size: 1em;
   margin-left: 10px;
+}
+nav img {
+  height: 40px;
+  border-radius: 100%;
+  border: 2px solid var(--primary);
+  cursor: pointer;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 /* homepage */
@@ -79,7 +93,14 @@ nav button {
   font-size: 0.9em;
   color: #555;
 }
-
+.apt-details img{
+  height: 100px;
+  margin: 10px;
+}
+.apt-details .detail{
+  height: 300px;
+  margin: 10px;
+}
 input{
   display: block;
 }
@@ -206,11 +227,11 @@ textarea{
   display: block;
 }
 
-/* realestates(admins) page */
-.admindetail-page{
+/* realestates page */
+.realestatedetail-page{
   display: block;
 }
-.admin-details{
+.realestate-details{
   background: #fff;
   border-radius: 4px;
   margin: 20px auto;
@@ -219,17 +240,17 @@ textarea{
   box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
   text-align: center;
 }
-.admin-details h4{
+.realestate-details h4{
   margin: 0 0 10px 0;
   font-size: 1.2em;
   color: var(--primary);
 }
-.admin-details p{
+.realestate-details p{
   margin: 0;
   font-size: 0.9em;
   color: #555;
 }
-.admin-details button{
+.realestate-details button{
   background: var(--primary);
   border: 0;
   color: #fff;
