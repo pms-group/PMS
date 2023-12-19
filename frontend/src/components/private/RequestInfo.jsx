@@ -1,9 +1,9 @@
-import { useAuthContext, useRequestContext } from "../hooks/useContexts";
+import { useAuthContext, useRequestContext } from "../../hooks/useContexts";
 
 // date fns
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 
-const RequestDetails = ({ request }) => {
+export default function RequestDetails({ request }){
     const {dispatch} = useRequestContext();
     const {user} = useAuthContext();
 
@@ -37,5 +37,3 @@ const RequestDetails = ({ request }) => {
         </div>
      );
 }
- 
-export default RequestDetails;

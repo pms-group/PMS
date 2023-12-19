@@ -1,19 +1,23 @@
 import { useState } from "react";
-import { useAptContext, useAuthContext } from "../../hooks/useContexts";
+import { useAptContext, useAuthContext } from "../../../hooks/useContexts";
 
-const UpdateApt = ({apt}) => {
+export default function UpdateApt({apt}){
     const {dispatch} = useAptContext();
     const {user} = useAuthContext();
 
     const [formData, setFormData] = useState({
-        bedrooms: '',
-        bathrooms: '',
-        type: 'Sell',
-        price: '',
-        available: '',
-        description: '',
+        bedrooms: apt.bedrooms,
+        bathrooms: apt.bathrooms,
+        type: apt.type,
+        price: apt.price,
+        available: apt.available,
+        description: apt.description,
+        removePics: false,
         images: []
     });
+
+    const [error, setError] = useState(null);
+    const [emptyFields, setEmptyFields] = useState([]);
 
     const handleInputChange = (e) => {
         const { name, value, files } = e.target;
@@ -23,9 +27,6 @@ const UpdateApt = ({apt}) => {
           [name]: files || value,
         }));
       };
-
-    const [error, setError] = useState(null);
-    const [emptyFields, setEmptyFields] = useState([]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -67,33 +68,36 @@ const UpdateApt = ({apt}) => {
                     setFormData({
                         bedrooms: '',
                         bathrooms: '',
-                        type: 'Sell',
+                        type: '',
                         price: '',
                         available: '',
                         description: '',
+                        removePics: false,
                         images: []
                     });
                     setEmptyFields([]);
                 }
             } 
         } catch (error) {
-            setError('An unexpected error occurred during the upload.');
+            setError(error.message);
             setEmptyFields([]);
         }
         
     }
 
-    const handleReset = () => {
-        setError(null);
+    const handleReset = (e) => {
+        e.preventDefault();
         setFormData({
-            bedrooms: '',
-            bathrooms: '',
-            type: 'Sell',
-            price: '',
-            available: '',
-            description: '',
+            bedrooms: apt.bedrooms,
+            bathrooms: apt.bathrooms,
+            type: apt.type,
+            price: apt.price,
+            available: apt.available,
+            description: apt.description,
+            removePics: false,
             images: []
         });
+        setError(null);
         setEmptyFields([]);
     }
 
@@ -166,6 +170,16 @@ const UpdateApt = ({apt}) => {
                 value={formData.description}
             />
 
+            <label>Remove All previous pictures? </label>
+            <select
+                name="removePics"
+                onChange={handleInputChange}
+                value={formData.removePics}
+            >
+                <option value={true}>Yes</option>
+                <option value={false}>No</option>
+            </select>
+
             <label>Images(5 images only with size limit of 2MB for each)</label>
             <input
                 type="file"
@@ -181,5 +195,3 @@ const UpdateApt = ({apt}) => {
         </form>
      );
 }
- 
-export default UpdateApt;

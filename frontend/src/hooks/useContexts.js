@@ -1,7 +1,7 @@
 import { AuthContext } from '../context/AuthContext';
 import { AptContext } from '../context/AptContext';
 import { RequestContext } from '../context/RequestContext';
-import { AdminContext } from '../context/AdminContext';
+import { RealEstateContext } from '../context/RealEstateContext';
 import { useContext } from 'react';
 
 export const useAuthContext = () => {
@@ -31,11 +31,11 @@ export const useRequestContext = () => {
     return context;
 };
 
-export const useAdminContext = () => {
-    const context = useContext(AdminContext);
+export const useRealEstateContext = () => {
+    const context = useContext(RealEstateContext);
 
     if(!context){
-        throw Error('useAdminContext must be used inside an AdminContextProvider');
+        throw Error('useRealEstateContext must be used inside an RealEstateContextProvider');
     }
     return context;
 };

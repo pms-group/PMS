@@ -1,4 +1,6 @@
-import { createContext, useReducer } from "react";
+import { createContext, useReducer, useEffect } from "react";
+import { useAuthContext } from "../hooks/useContexts";
+
 
 export const RequestContext = createContext();
 
@@ -30,6 +32,59 @@ export const RequestContextProvider = ({children}) => {
     const [state, dispatch] = useReducer(requestReducer, {
         requests: null
     });
+
+    const {user} = useAuthContext();
+
+    useEffect(() => {
+        const fetchRequests = async () => {
+            const response = await fetch('/api/requests', {
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+            const json = await response.json();
+
+            if(response.ok){
+                dispatch({type: 'SET_REQUESTS', payload: json});
+            }
+        };
+
+        const fetchClientRequests = async () => {
+            const response = await fetch('/api/requests/client_requests', {
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+            const json = await response.json();
+
+            if(response.ok){
+                (json.length > 0) ? dispatch({type: 'SET_REQUESTS', payload: json}) : dispatch({type: 'SET_REQUESTS', payload: null});
+            }
+        };
+
+        const fetchAdminRequests = async () => {
+            const response = await fetch('/api/requests/realestate_requests', {
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+            const json = await response.json();
+
+            if(response.ok){
+                (json.length > 0) ? dispatch({type: 'SET_REQUESTS', payload: json}) : dispatch({type: 'SET_REQUESTS', payload: null});
+            }
+        };
+
+
+        if(user && user.privilege === 'superadmin'){
+            fetchRequests();
+        } else if(user && user.privilege === 'admin'){
+            fetchAdminRequests();
+        } else if(user && user.privilege === 'user'){
+            fetchClientRequests();
+        }
+
+    }, [dispatch, user]);
 
 
     return(

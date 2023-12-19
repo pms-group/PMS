@@ -1,8 +1,10 @@
 import { useState } from "react";
-import {  useAuthContext } from "../hooks/useContexts";
+import { useNavigate } from "react-router-dom";
+import {  useAuthContext } from "../../hooks/useContexts";
 
-const UpdateProfile = () => {
+export default function UpdateProfile(){
     const {user, dispatch} = useAuthContext();
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         fullname: user.fullname,
@@ -11,7 +13,8 @@ const UpdateProfile = () => {
         contact: user.contact,
         address: user.address,
         description: user.description,
-        gender: user.gender ? user.gender : 'Male',
+        gender: user.gender,
+        removePic: false,
         changePWD: false,
         oldPWD: '',
         newPWD: '',
@@ -31,19 +34,22 @@ const UpdateProfile = () => {
 
     const handleSubmit = async (evt) => {
         evt.preventDefault();
-
         setIsLoading(true);
         setError(null);
+        setEmptyFields([]);
         
-        if(formData.changePWD && (formData.newPWD !== formData.confirmPWD)){
+        if(formData.changePWD.toString('true') && (formData.newPWD !== formData.confirmPWD)){
             setError('Passwords did not match. Please insert correctly');
             setIsLoading(false);
-            setEmptyFields([]);
+            setEmptyFields(emptyFields.push('password'));
             return;
         }
 
         const data = new FormData();
         for(let key in formData){
+            if((key === 'image' && formData.removePic.toString() === 'true') || key === 'confirmPWD'){
+                continue
+            }
             data.append(key, formData[key]);
         }
 
@@ -66,17 +72,38 @@ const UpdateProfile = () => {
                 setIsLoading(false);
                 setEmptyFields([]);
                 dispatch({type: 'LOGOUT'});
+                navigate('/login');
             }
         } catch (error) {
-            setError('An unexpected error occurred during the upload.');
+            setIsLoading(false);
+            setError(error);
+            setEmptyFields([]);
         }
+    }
 
-        
-        
+    const handleReset = (e) => {
+        e.preventDefault();
+        setFormData({
+            fullname: user.fullname,
+            email: user.email,
+            username: user.username,
+            contact: user.contact,
+            address: user.address,
+            description: user.description,
+            gender: user.gender,
+            removePic: false,
+            changePWD: false,
+            oldPWD: '',
+            newPWD: '',
+            confirmPWD: '',
+            image: null
+        })
+        setError(null);
+        setEmptyFields([]);
     }
 
     return ( 
-        <form className="other-forms" onSubmit={handleSubmit}>
+        <form className="other-forms" onSubmit={handleSubmit} onReset={handleReset}>
             <h3>Update Profile</h3>
 
             <label>Full Name: </label>
@@ -90,7 +117,7 @@ const UpdateProfile = () => {
 
             <label>Email: </label>
             <input
-                type="text"
+                type="email"
                 name="email"
                 onChange={handleInputChange}
                 value={formData.email}
@@ -108,7 +135,7 @@ const UpdateProfile = () => {
 
             <label>Contact: </label>
             <input
-                type="text"
+                type="tel"
                 name="contact"
                 onChange={handleInputChange}
                 value={formData.contact}
@@ -117,6 +144,7 @@ const UpdateProfile = () => {
 
             <label>Gender: </label>
             <select
+                name="gender"
                 value={formData.gender}
                 onChange={handleInputChange}
             >
@@ -141,11 +169,22 @@ const UpdateProfile = () => {
                 value={formData.description}
             />
 
-            <label>Profile Picture:</label>
+            <label>Remove Profile picture? </label>
+            <select
+                name="removePic"
+                onChange={handleInputChange}
+                value={formData.removePic}
+            >
+                <option value={true}>Yes</option>
+                <option value={false}>No</option>
+            </select>
+
+            <label>Change Profile Picture():</label>
             <input
                 type="file"
                 accept=".png, .jpg, .jpeg"
                 name="image"
+                disabled={formData.removePic.toString() === 'true'}
                 onChange={handleInputChange}
             />
 
@@ -184,7 +223,7 @@ const UpdateProfile = () => {
                     name="confirmPWD"
                     onChange={handleInputChange}
                     value={formData.confirmPWD}
-                    className={emptyFields.includes('confirmPWD') ? 'error' : ''}
+                    className={emptyFields.includes('newPWD') ? 'error' : ''}
                 />
             </div>}
 
@@ -194,5 +233,3 @@ const UpdateProfile = () => {
         </form>
      );
 }
- 
-export default UpdateProfile;

@@ -2,9 +2,9 @@
 import { useAuthContext } from '../hooks/useContexts';
 
 // components
-import UpdateProfile from '../components/UpdateProfile';
+import UpdateProfile from '../components/private/UpdateProfile';
 
-const UserProfile = () => {
+export default function UserProfile(){
     const {user} = useAuthContext();
 
     return ( 
@@ -27,5 +27,3 @@ const UserProfile = () => {
         </div>
      );
 }
- 
-export default UserProfile;

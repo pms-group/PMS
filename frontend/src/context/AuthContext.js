@@ -6,11 +6,13 @@ export const authReducer = (state, action) => {
     switch(action.type){
         case 'LOGIN':
             return {
-                user: action.payload
+                user: action.payload,
+                authenticated: true
             }
         case 'LOGOUT':
             return {
-                user: null
+                user: null,
+                authenticated: false
             }
         default:
             return state
@@ -20,7 +22,8 @@ export const authReducer = (state, action) => {
 
 export const AuthContextProvider = ({children}) => {
     const [state, dispatch] = useReducer(authReducer, {
-        user: null
+        user: null,
+        authenticated: localStorage.getItem('user') ? true : false 
     });
 
     useEffect(() => {
@@ -28,9 +31,7 @@ export const AuthContextProvider = ({children}) => {
         if(user){
             dispatch({type: 'LOGIN', payload: user});
         }
-    }, []);
-
-    console.log('AuthContext state: ', state);
+    }, [dispatch]);
 
     return (
         <AuthContext.Provider value={{...state, dispatch}}>

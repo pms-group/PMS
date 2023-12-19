@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { useAuthContext, useRequestContext } from "../hooks/useContexts";
+import { useAuthContext, useRequestContext } from "../../hooks/useContexts";
 
-const Navbar = () => {
+export default function Navbar(){
     const {user, dispatch: userDispatch} = useAuthContext();
 
     const {dispatch: requestDispatch} = useRequestContext();
@@ -25,11 +25,13 @@ const Navbar = () => {
                 </Link>
                 <nav>       
 
-                    <Link to={'/real_estates'}><button>Real Estates</button></Link>
+                    <Link to={'/apartments'}><button>Apartments</button></Link>
+                    <Link to={'/'}><button>Real Estates</button></Link>
 
                     {user && (
                         <div>
                             <Link to='/profile'>
+                            <img src={user.imageUrl ? `http://localhost:5000/${user.imageUrl}` : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'} alt='' />
                                 <span>{user.fullname}</span>
                             </Link>
                             <Link to={'/requests'}><button>My Requests</button></Link>
@@ -48,5 +50,3 @@ const Navbar = () => {
         </header>
      );
 }
- 
-export default Navbar;

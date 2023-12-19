@@ -22,9 +22,9 @@ router.patch('/update_profile', requireAuth, userController.updateProfile);
 router.post('/admin_signup',requireSuperAuth, userController.signupAdmin);
 
 // admin DELETE route
-router.delete('/remove_admin/:id', requireSuperAuth, userController.deleteAdmin);
+router.delete('/remove_realestate/:id', requireSuperAuth, userController.deleteAdmin);
 
 // GET all admin route
-router.get('/view_admins', userController.getAdmins)
+router.get('/view_realestates', userController.getAdmins)
 
 module.exports = router
