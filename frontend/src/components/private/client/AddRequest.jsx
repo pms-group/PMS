@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify'
 import { useRequestContext, useAuthContext } from "../../../hooks/useContexts";
 
 export default function AddRequest({apt}){
@@ -12,8 +13,6 @@ export default function AddRequest({apt}){
         id: apt._id
     });
 
-    const [error, setError] = useState(null);
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
@@ -22,6 +21,7 @@ export default function AddRequest({apt}){
     const handleSubmit = async (e) => {
         e.preventDefault();
         if(!user){
+            toast.info('Login to add a request');
             navigate('/login');
             return;
         }
@@ -40,23 +40,22 @@ export default function AddRequest({apt}){
             const res = await response.json();
     
             if(!response.ok){
-                setError(res.error);
+                toast.error(res.error);
             }
             if(response.ok){
-                setError(null);
+                toast.success('Added a request successfully')
                 setFormData({ ...formData, message: ''});
                 dispatch({type: 'CREATE_REQUEST', payload: res});
                 navigate('/requests');
             }
-        } catch (error) {
-            setError(error);
+        } catch (err) {
+            toast.error(err.message);
         }
 
     }
 
     const handleReset = (e) => {
         e.preventDefault();
-        setError(null);
         setFormData({ ...formData, message: ''})
     }
 
@@ -82,7 +81,6 @@ export default function AddRequest({apt}){
 
             <input className="submit" type="submit" value="Add"/>
             <input className="cancel" type="reset" value="Cancel"/>
-            {error && <div className="error">{error}</div>}
         </form>
      );
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from 'react-toastify'
 import { useAptContext, useAuthContext } from "../../../hooks/useContexts";
 
 export default function UpdateApt({apt}){
@@ -16,7 +17,6 @@ export default function UpdateApt({apt}){
         images: []
     });
 
-    const [error, setError] = useState(null);
     const [emptyFields, setEmptyFields] = useState([]);
 
     const handleInputChange = (e) => {
@@ -30,7 +30,6 @@ export default function UpdateApt({apt}){
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(null);
         setEmptyFields([]);
 
         const {images} = formData;
@@ -54,17 +53,17 @@ export default function UpdateApt({apt}){
             const json = await response.json();
     
             if(!response.ok){
-                setError(json.error);
+                toast.error(json.error);
                 setEmptyFields(json.emptyFields);
             }
             if(response.ok){
                 
+                toast.success('Updated an apartment successfully');
                 const update = await fetch('/api/apartments');
                 const json = await update.json();
     
                 if(update.ok){
                     dispatch({type: 'SET_APARTMENTS', payload: json});
-                    setError(null);
                     setFormData({
                         bedrooms: '',
                         bathrooms: '',
@@ -78,8 +77,8 @@ export default function UpdateApt({apt}){
                     setEmptyFields([]);
                 }
             } 
-        } catch (error) {
-            setError(error.message);
+        } catch (err) {
+            toast.error(err.message);
             setEmptyFields([]);
         }
         
@@ -97,7 +96,6 @@ export default function UpdateApt({apt}){
             removePics: false,
             images: []
         });
-        setError(null);
         setEmptyFields([]);
     }
 
@@ -191,7 +189,6 @@ export default function UpdateApt({apt}){
 
             <input className="submit" type="submit" value="Update Apartment"/>
             <input className="cancel" type="reset" value="Cancel"/>
-            {error && <div className="error">{error}</div>}
         </form>
      );
 }

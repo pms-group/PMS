@@ -25,12 +25,12 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({username});
     if(!user){
-        return res.status(400).json({error: 'Incorrect Username', emptyFields});
+        return res.status(400).json({error: 'Incorrect Username', emptyFields: ['username']});
     }
 
     const match = await bcrypt.compare(password, user.password);
     if(!match){
-        return res.status(400).json({error: 'Incorrect Password', emptyFields});
+        return res.status(400).json({error: 'Incorrect Password', emptyFields: ['password']});
     }
 
     // create token
@@ -59,22 +59,22 @@ const signupClient = async (req, res) => {
         return res.status(400).json({error: 'Fill out all blanks', emptyFields});
     }
     if(!validator.isEmail(email)){
-        return res.status(400).json({error: 'Invalid email format', emptyFields});
+        return res.status(400).json({error: 'Invalid email format', emptyFields: ['email']});
     }
     if(!validator.isStrongPassword(password)){
-        return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields});
+        return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields: ['password']});
     }
 
     const exists = await User.findOne({username});
     
     if(exists){
-        return res.status(400).json({error: 'Username already in use', emptyFields});
+        return res.status(400).json({error: 'Username already in use', emptyFields: ['username']});
     }
 
     const exists1 = await User.findOne({email});
     
     if(exists1){
-        return res.status(400).json({error: 'Email already in use', emptyFields});
+        return res.status(400).json({error: 'Email already in use', emptyFields: ['email']});
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -106,39 +106,39 @@ const updateProfile = async (req, res) => {
         }
         if(!validator.isEmail(email)){
             req.file && fs.unlink(req.file.path, imageDeleteError);
-            return res.status(400).json({error: 'Invalid email format', emptyFields});
+            return res.status(400).json({error: 'Invalid email format', emptyFields: ['email']});
         }
         if(newPWD && !validator.isStrongPassword(newPWD)){
             req.file && fs.unlink(req.file.path, imageDeleteError);
-            return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields});
+            return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields: ['password']});
         }
 
         const exists = await User.findOne({username});
         
         if(exists && exists._id.toString() !== req.user._id.toString()){
             req.file && fs.unlink(req.file.path, imageDeleteError);
-            return res.status(400).json({error: 'Username already in use', emptyFields});
+            return res.status(400).json({error: 'Username already in use', emptyFields: ['username']});
         }
 
         const exists1 = await User.findOne({email});
         
         if(exists1 && exists1._id.toString() !== req.user._id.toString()){
             req.file && fs.unlink(req.file.path, imageDeleteError);
-            return res.status(400).json({error: 'Email already in use', emptyFields});
+            return res.status(400).json({error: 'Email already in use', emptyFields: ['email']});
         }
 
         const exists2 = await User.findOne({contact});
         
         if(exists2 && exists2._id.toString() !== req.user._id.toString()){
             req.file && fs.unlink(req.file.path, imageDeleteError);
-            return res.status(400).json({error: 'Phone Number already in use', emptyFields});
+            return res.status(400).json({error: 'Phone Number already in use', emptyFields: ['contact']});
         }
 
         const exists3 = await User.findOne({fullname, privilege: 'admin'});
         
         if(exists3 && req.user.privilege === 'admin' && exists3._id.toString() !== req.user._id.toString()){
             req.file && fs.unlink(req.file.path, imageDeleteError);
-            return res.status(400).json({error: 'RealEstate name already in use', emptyFields});
+            return res.status(400).json({error: 'RealEstate name already in use', emptyFields: ['fullname']});
         }
 
         let hash;
@@ -148,7 +148,7 @@ const updateProfile = async (req, res) => {
             const match = await bcrypt.compare(oldPWD, user.password);
             if(!match){
                 req.file && fs.unlink(req.file.path, imageDeleteError);
-                return res.status(400).json({error: 'Incorrect Password', emptyFields});
+                return res.status(400).json({error: 'Incorrect Password', emptyFields: ['password']});
             }
             const salt = await bcrypt.genSalt(10);
             hash = await bcrypt.hash(newPWD, salt);
@@ -188,26 +188,26 @@ const signupAdmin = async (req, res) => {
         return res.status(400).json({error: 'Fill out all', emptyFields});
     }
     if(!validator.isEmail(email)){
-        return res.status(400).json({error: 'Invalid email format', emptyFields});
+        return res.status(400).json({error: 'Invalid email format', emptyFields: ['email']});
     }
     if(!validator.isStrongPassword(password)){
-        return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields});
+        return res.status(400).json({error: 'Weak password. The password should contain UPPER case, lower case, number and symbol keys.', emptyFields: ['password']});
     }
 
     const exists = await User.findOne({username});
     
     if(exists){
-        return res.status(400).json({error: 'Username already in use', emptyFields});
+        return res.status(400).json({error: 'Username already in use', emptyFields: ['']});
     }
     const exists1 = await User.findOne({contact});
     
     if(exists1){
-        return res.status(400).json({error: 'Phone Number already in use', emptyFields});
+        return res.status(400).json({error: 'Phone Number already in use', emptyFields: ['contact']});
     }
     const exists2 = await User.findOne({fullname, privilege: 'admin'});
     
     if(exists2){
-        return res.status(400).json({error: 'RealEstate name already in use', emptyFields});
+        return res.status(400).json({error: 'RealEstate name already in use', emptyFields: ['fullname']});
     }
 
     const salt = await bcrypt.genSalt(10);

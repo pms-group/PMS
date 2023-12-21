@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify'
 import {  useAuthContext } from "../../hooks/useContexts";
 
 export default function UpdateProfile(){
@@ -10,10 +11,10 @@ export default function UpdateProfile(){
         fullname: user.fullname,
         email: user.email,
         username: user.username,
-        contact: user.contact,
-        address: user.address,
-        description: user.description,
-        gender: user.gender,
+        contact: user.contact ? user.contact : '',
+        address: user.address ? user.address : '',
+        description: user.description ? user.description : '',
+        gender: user.gender ? user.gender : 'Male',
         removePic: false,
         changePWD: false,
         oldPWD: '',
@@ -22,7 +23,6 @@ export default function UpdateProfile(){
         image: null
     });
 
-    const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(null);
     const [emptyFields, setEmptyFields] = useState([]);
 
@@ -35,11 +35,10 @@ export default function UpdateProfile(){
     const handleSubmit = async (evt) => {
         evt.preventDefault();
         setIsLoading(true);
-        setError(null);
         setEmptyFields([]);
         
         if(formData.changePWD.toString('true') && (formData.newPWD !== formData.confirmPWD)){
-            setError('Passwords did not match. Please insert correctly');
+            toast.error('Passwords did not match. Please insert correctly');
             setIsLoading(false);
             setEmptyFields(emptyFields.push('password'));
             return;
@@ -65,18 +64,19 @@ export default function UpdateProfile(){
     
             if(!response.ok){
                 setIsLoading(false);
-                setError(json.error);
+                toast.error(json.error);
                 setEmptyFields(json.emptyFields)
             }
             if(response.ok){
                 setIsLoading(false);
+                toast.success('Updated your profile successfully, Login to see changes');
                 setEmptyFields([]);
                 dispatch({type: 'LOGOUT'});
                 navigate('/login');
             }
-        } catch (error) {
+        } catch (err) {
             setIsLoading(false);
-            setError(error);
+            toast.error(err.message)
             setEmptyFields([]);
         }
     }
@@ -87,10 +87,10 @@ export default function UpdateProfile(){
             fullname: user.fullname,
             email: user.email,
             username: user.username,
-            contact: user.contact,
-            address: user.address,
-            description: user.description,
-            gender: user.gender,
+            contact: user.contact ? user.contact : '',
+            address: user.address ? user.address : '',
+            description: user.description ? user.description : '',
+            gender: user.gender ? user.gender : 'Male',
             removePic: false,
             changePWD: false,
             oldPWD: '',
@@ -98,7 +98,6 @@ export default function UpdateProfile(){
             confirmPWD: '',
             image: null
         })
-        setError(null);
         setEmptyFields([]);
     }
 
@@ -229,7 +228,6 @@ export default function UpdateProfile(){
 
             <input className="submit" type="submit" value="Update" disabled={isLoading} />
             <input className="cancel" type="reset" value="Cancel" disabled={isLoading}/>
-            {error && <div className="error">{error}</div>}
         </form>
      );
 }

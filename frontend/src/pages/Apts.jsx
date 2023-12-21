@@ -21,19 +21,19 @@ export default function Apts(){
     const {user} = useAuthContext();
 
     return ( 
-        <div className={(user && (user.privilege === 'admin' || user.privilege === 'superadmin')) ? 'home': 'home1'}>
+        <div className={(user?.privilege === 'admin' || user?.privilege === 'superadmin') ? 'home': 'home1'}>
 
             <div className="apartments">
                 <h2>Apartments</h2>
-                {apts && apts.map( apt => (
+                {apts?.map( apt => (
                     <div onClick={() => handleClick(apt._id)} key={apt._id} className="links">
                         <AptInfo key={apt._id} apt={apt}/>
                     </div>
                 ))}
             </div>
 
-            {user && user.privilege === 'admin' ? <AddApt /> : null }
-            {user && user.privilege === 'superadmin' ? <AddRealEstate /> : null }
+            {user?.privilege === 'admin' && <AddApt />}
+            {user?.privilege === 'superadmin' && <AddRealEstate />}
         </div>
      );
 }

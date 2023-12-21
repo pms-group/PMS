@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 
 export default function Signup(){
     const [formData, setFormData] = useState({
@@ -12,7 +13,6 @@ export default function Signup(){
     });
     
 
-    const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(null);
     const [emptyFields, setEmptyFields] = useState([]);
 
@@ -26,10 +26,9 @@ export default function Signup(){
     const handleSubmit = async (evt) => {
         evt.preventDefault();
         setIsLoading(true);
-        setError(null);
 
         if(formData.password !== formData.confirmPWD){
-            setError('Passwords did not match. Please insert correctly');
+            toast.error('Passwords did not match. Please insert correctly');
             setIsLoading(false);
             setEmptyFields(['password']);
             return;
@@ -49,17 +48,18 @@ export default function Signup(){
     
             if(!response.ok){
                 setIsLoading(false);
-                setError(json.error);
+                toast.error(json.error);
                 setEmptyFields(json.emptyFields)
             }
             if(response.ok){
+                toast.success('Signed up successfully. Now Log in');
                 setIsLoading(false);
                 setEmptyFields([])
                 navigate('/login');
             }
-        } catch (error) {
+        } catch (err) {
             setIsLoading(false);
-            setError(error);
+            toast.error(err.message);
             setEmptyFields([]);
         }
     }
@@ -119,7 +119,6 @@ export default function Signup(){
 
             <input className="submit" type="submit" value="Sign Up" disabled={isLoading} />
             <input className="cancel" type="reset" value="Cancel" disabled={isLoading}/>
-            {error && <div className="error">{error}</div>}
         </form>
      );
 }

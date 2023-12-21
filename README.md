@@ -9,8 +9,6 @@ Rename the .envexample file in the backend folder to .env and feel free to modif
 ### Install dependencies
 
 ```
-# If you haven't installed nodemon globally, install it
-npm install -g nodemon
 
 # Backend deps
 cd backend

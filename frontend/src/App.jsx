@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route} from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // pages and components
 import PrivateRoute from './components/private/PrivateRoute';
@@ -47,7 +49,9 @@ export default function App(){
             </Route>
 
           </Routes>
-        </div>  
+        </div>
+
+        <ToastContainer />
       </BrowserRouter>
       
     </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {  useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuthContext, useRealEstateContext } from "../../../hooks/useContexts";
 
 export default function AddRealEstate(){
@@ -16,7 +17,6 @@ export default function AddRealEstate(){
         confirmPWD: ''
     });
 
-    const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(null);
     const [emptyFields, setEmptyFields] = useState([]);
 
@@ -28,11 +28,10 @@ export default function AddRealEstate(){
     const handleSubmit = async (evt) => {
         evt.preventDefault();
         setIsLoading(true);
-        setError(null);
         setEmptyFields([]);
 
         if(formData.password !== formData.confirmPWD){
-            setError('Passwords did not match. Please insert correctly');
+            toast.error('Passwords did not match. Please insert correctly')
             setIsLoading(false);
             setEmptyFields(['password']);
             return;
@@ -54,26 +53,33 @@ export default function AddRealEstate(){
             const json = await response.json();
     
             if(!response.ok){
+                toast.error(json.error);
                 setIsLoading(false);
-                setError(json.error);
                 setEmptyFields(json.emptyFields)
             }
             if(response.ok){
-                setError(null);
+                toast.success('Added a realestate successfully')
                 setIsLoading(false);
                 setEmptyFields([]);
+                setFormData({
+                    fullname: '',
+                    email: '',
+                    contact: '',
+                    username: '',
+                    password: '',
+                    confirmPWD: ''
+                });
                 dispatch({type: 'CREATE_REALESTATE', payload: json});
                 navigate('/');
             }
-        } catch (error) {
+        } catch (err) {
             setIsLoading(false);
-            setError(error);
+            toast.error(err.message);
             setEmptyFields([]);
         }
     }
 
     const handleReset = () => {
-        setError(null);
         setEmptyFields([]);
         setFormData({
             fullname: '',
@@ -145,7 +151,6 @@ export default function AddRealEstate(){
 
             <input className="submit" type="submit" value="Register" disabled={isLoading} />
             <input className="cancel" type="reset" value="Cancel" disabled={isLoading}/>
-            {error && <div className="error">{error}</div>}
         </form>        
      );
 }

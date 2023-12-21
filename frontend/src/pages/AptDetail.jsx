@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify'
 import { useAuthContext, useAptContext } from "../hooks/useContexts";
 
 // date fns
@@ -19,11 +20,11 @@ export default function AptDetail(){
     const [owner, setOwner] = useState(false);
 
     useEffect(() => {
-        setApt(apts && apts.find(apt => {
+        setApt(apts?.find(apt => {
             return apt._id === id;
         }));
 
-        setOwner(user && apt && user._id === apt.realestate_id ? true : false)
+        setOwner(user?._id === apt?.realestate_id ? true : false)
     }, [apts, id, user, apt]);
 
     const handleDelete = async () => {
@@ -34,16 +35,17 @@ export default function AptDetail(){
         const json = await response.json();
 
         if(!response.ok){
-            console.log(json.error);
+            toast.error(json.error);
         }
         if(response.ok){
+            toast.success('Deleted an apartment successfully');
             dispatch({type: 'DELETE_APARTMENT', payload: json})
             navigate('/apartments');
         }
     }
 
     return ( 
-        <div className={(user && !owner && (user.privilege !== 'user')) ? 'aptdetail-page1': 'aptdetail-page'}>
+        <div className={(!owner && (user && (user?.privilege !== 'user'))) ? 'aptdetail-page1': 'aptdetail-page'}>
             <div>
                 <h2>Apartment Details</h2>
                 {apt && <div className="apt-details">
@@ -55,17 +57,17 @@ export default function AptDetail(){
                     <p>Price: <strong>{apt.price}</strong></p>
                     <p>Description: <strong>{apt.description}</strong></p>
                     <p>Created At: <strong>{formatDistanceToNow(new Date(apt.createdAt), {addSuffix: true})}</strong></p>
-                    {apt && owner &&
+                    {owner &&
                         <button onClick={handleDelete}>Remove Apartment</button>
                     }<br />
-                    {apt.imageUrls.length > 0 ? apt.imageUrls.map(image => (
+                    {apt.imageUrls.length > 0 && apt.imageUrls.map(image => (
                         <img className="detail" src={`http://localhost:5000/${image}`} alt="" />
-                    )) : null}
+                    ))}
                 </div>}
             </div>
             
-            {apt && (!user || (user && user.privilege === 'user')) ? <AddRequest apt={apt} /> : null }
-            {apt && owner ? <UpdateApt apt={apt} /> : null }
+            {apt && (!user || (user?.privilege === 'user')) && <AddRequest apt={apt} />}
+            {apt && owner && <UpdateApt apt={apt} />}
         </div>
      );
 }

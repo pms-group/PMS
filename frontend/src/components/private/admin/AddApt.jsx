@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from 'react-toastify'
 import { useAptContext, useAuthContext } from "../../../hooks/useContexts";
 
 export default function AddApt(){
@@ -15,7 +16,6 @@ export default function AddApt(){
         images: []
     });
 
-    const [error, setError] = useState(null);
     const [emptyFields, setEmptyFields] = useState([]);
 
     const handleInputChange = (e) => {
@@ -28,7 +28,6 @@ export default function AddApt(){
     
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(null);
         setEmptyFields([]);
 
         const {images} = formData;
@@ -52,11 +51,11 @@ export default function AddApt(){
             const json = await response.json();
     
             if(!response.ok){
-                setError(json.error);
+                toast.error(json.error);
                 setEmptyFields(json.emptyFields);
             }
             if(response.ok){
-                setError(null);
+                toast.success('Added an apartment successfully');
                 setFormData({
                     bedrooms: '',
                     bathrooms: '',
@@ -69,8 +68,8 @@ export default function AddApt(){
                 setEmptyFields([]);
                 dispatch({type: 'CREATE_APARTMENT', payload: json});
             }
-        } catch (error) {
-            setError(error.message);
+        } catch (err) {
+            toast.error(err.message);
             setEmptyFields([]);
         }
         
@@ -78,7 +77,6 @@ export default function AddApt(){
 
     const handleReset = (e) => {
         e.preventDefault()
-        setError(null);
         setFormData({
             bedrooms: '',
             bathrooms: '',
@@ -163,7 +161,6 @@ export default function AddApt(){
 
             <input className="submit" type="submit" value="Add Apartment"/>
             <input className="cancel" type="reset" value="Cancel"/>
-            {error && <div className="error">{error}</div>}
         </form>
      );
 }

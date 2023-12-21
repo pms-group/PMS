@@ -58,7 +58,7 @@ export const RequestContextProvider = ({children}) => {
             const json = await response.json();
 
             if(response.ok){
-                (json.length > 0) ? dispatch({type: 'SET_REQUESTS', payload: json}) : dispatch({type: 'SET_REQUESTS', payload: null});
+                dispatch({type: 'SET_REQUESTS', payload: json});
             }
         };
 
@@ -71,7 +71,7 @@ export const RequestContextProvider = ({children}) => {
             const json = await response.json();
 
             if(response.ok){
-                (json.length > 0) ? dispatch({type: 'SET_REQUESTS', payload: json}) : dispatch({type: 'SET_REQUESTS', payload: null});
+                dispatch({type: 'SET_REQUESTS', payload: json});
             }
         };
 

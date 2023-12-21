@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify'
 import { useAuthContext } from "../hooks/useContexts";
 
 export default function Login(){
@@ -11,7 +12,6 @@ export default function Login(){
         password: ''
     });
 
-    const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(null);
     const [emptyFields, setEmptyFields] = useState([]);
 
@@ -23,7 +23,6 @@ export default function Login(){
     const handleSubmit = async (evt) => {
         evt.preventDefault();
         setIsLoading(true);
-        setError(null);
 
         const updatedData = {...formData};
         const data = JSON.stringify({...updatedData});
@@ -38,11 +37,12 @@ export default function Login(){
             const json = await response.json();
             if(!response.ok){
                 setIsLoading(false);
-                setError(json.error);
+                toast.error(json.error);
                 setEmptyFields(json.emptyFields);
             }
             if(response.ok){
                 setEmptyFields([]);
+                toast.success('Logged in successfully');
     
                 // save the user to local storage
                 localStorage.setItem('user', JSON.stringify(json));
@@ -56,9 +56,9 @@ export default function Login(){
                 navigate(-1);
 
             }
-        } catch (error) {
+        } catch (err) {
             setIsLoading(false);
-            setError(error);
+            toast.error(err.message);
             setEmptyFields([]);
         }
     }
@@ -91,7 +91,6 @@ export default function Login(){
 
             <input className="submit" type="submit" value="Log in" disabled={isLoading} />
             <input className="cancel" type="reset" value="Cancel" disabled={isLoading}/>
-            {error && <div className="error">{error}</div>}
         </form>
      );
 }

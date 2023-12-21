@@ -1,7 +1,7 @@
 export default function AptInfo({ apt }){
     return ( 
         <div className="apt-details">
-            {apt && apt.imageUrls.length > 0 ? <img src={`http://localhost:5000/${apt.imageUrls[0]}`} alt="" /> : null}
+            {apt.imageUrls.length > 0 ? <img src={`http://localhost:5000/${apt.imageUrls[0]}`} alt="" /> : null}
             <h4>{apt.realestate_name}'s Apartment</h4>
             <p><strong>{apt.bedrooms}</strong> bedrooms</p>
             <p><strong>{apt.bathrooms}</strong> bathrooms</p>

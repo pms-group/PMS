@@ -1,3 +1,4 @@
+import { toast } from 'react-toastify'
 import { useAuthContext, useRequestContext } from "../../hooks/useContexts";
 
 // date fns
@@ -15,10 +16,10 @@ export default function RequestDetails({ request }){
         const json = await response.json();
 
         if(!response.ok){
-            console.log(json.error);
+            toast.error(json.error);
         }
-
         if(response.ok){
+            toast.success('Deleted a request successfully');
             dispatch({type: 'DELETE_REQUEST', payload: json})
         }
     }

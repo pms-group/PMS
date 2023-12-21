@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify'
 import { useAuthContext, useAptContext, useRealEstateContext } from "../hooks/useContexts";
 
 // date fns
@@ -21,11 +22,11 @@ export default function RealEstateDetail(){
 
 
     useEffect(() => {
-        setRealestate(realestates && realestates.find(realestate => {
+        setRealestate(realestates?.find(realestate => {
             return realestate._id === id;
         }));
 
-        setRealestateApts(apts && apts.filter(apt => {
+        setRealestateApts(apts?.filter(apt => {
             if(apt.realestate_id === id){
             }
             return apt.realestate_id === id;
@@ -40,9 +41,10 @@ export default function RealEstateDetail(){
         const json = await response.json();
 
         if(!response.ok){
-            console.log(json.error);
+            toast.error(json.error);
         }
         if(response.ok){
+            toast.success('Removed a realestate successfully');
             dispatch({type: 'DELETE_REALESTATE', payload: json})
             navigate('/');
         }
@@ -60,7 +62,7 @@ export default function RealEstateDetail(){
                 <p>Email: <strong>{realestate.email}</strong></p>
                 <p>Contact: <strong>{realestate.contact}</strong></p>
 
-                {(user && user.privilege === 'superadmin') ? 
+                {(user?.privilege === 'superadmin') ? 
                     <div>
                         <p>Created At: <strong>{formatDistanceToNow(new Date(realestate.createdAt), {addSuffix: true})}</strong></p><br />
                         <button onClick={handleDelete}>Remove RealEstate</button>
@@ -70,11 +72,11 @@ export default function RealEstateDetail(){
 
             <h2>Apartments Within this RealEstate</h2>
             <div className="realestate-apts">
-                {(realestateApts && realestateApts.length > 0) ? realestateApts.map( apt => (
+                {(realestateApts?.length > 0) ? realestateApts.map( apt => (
                     <div onClick={() => handleClick(apt._id)} key={apt._id} className='links'>
                         <AptDetails key={apt._id} apt={apt}/>
                     </div>
-                )) : <h3>No apartment listed by this apartment</h3> }
+                )) : <h3>No apartment listed by this realestate</h3> }
 
             </div>
         </div>

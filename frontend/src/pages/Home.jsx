@@ -19,18 +19,18 @@ export default function Home(){
     const {user} = useAuthContext();
     
     return ( 
-        <div className={(user && (user.privilege === 'admin' || user.privilege === 'superadmin')) ? 'home': 'home1'}>
+        <div className={(user?.privilege === 'admin' || user?.privilege === 'superadmin') ? 'home': 'home1'}>
             <div className="realestates">
                 <h2>Real Estates</h2>
-                {realestates && realestates.map(realestate => (
+                {realestates?.map(realestate => (
                     <div onClick={() => handleClick(realestate._id)} key={realestate._id} className="links">
                         <RealEstateInfo key={realestate._id} realestate={realestate}/>
                     </div>
                 ))}
             </div>
 
-            {user && user.privilege === 'admin' ? <AddApt /> : null }
-            {user && user.privilege === 'superadmin' ? <AddRealEstate /> : null }
+            {user?.privilege === 'admin' ? <AddApt /> : null }
+            {user?.privilege === 'superadmin' ? <AddRealEstate /> : null }
         </div>
 
      );

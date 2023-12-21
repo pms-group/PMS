@@ -1,16 +1,14 @@
 import { useState } from "react";
+import { toast } from 'react-toastify'
 import { useRequestContext, useAuthContext } from "../../../hooks/useContexts";
 
-export default function UpdateRequest(){
+export default function UpdateRequest({request_id}){
     const {dispatch} = useRequestContext();
     const {user} = useAuthContext();
 
     const [formData, setFormData] = useState({
         message: '',
-        id: ''
     });
-
-    const [error, setError] = useState(null);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -19,17 +17,14 @@ export default function UpdateRequest(){
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (formData.id === ''){
-            setError('Please enter the Request ID');
+        if (request_id === ''){
+            toast.error('Please select one request to update')
             return;
         }
-
-        const updatedData = {...formData};
-        delete updatedData.id;
-        const data = JSON.stringify({...updatedData});
+        const data = JSON.stringify(formData);
 
         try {
-            const response = await fetch(`/api/requests/client_requests/${formData.id}`, {
+            const response = await fetch(`/api/requests/client_requests/${request_id}`, {
                 method: 'PATCH',
                 body: data,
                 headers: {
@@ -40,10 +35,10 @@ export default function UpdateRequest(){
             const res = await response.json();
     
             if(!response.ok){
-                setError(res.error);
+                toast.error(res.error)
             }
             if(response.ok){
-                setError(null);
+                toast.success('Updated a request successfully');
                 setFormData({
                     message: '',
                     id: ''
@@ -60,14 +55,13 @@ export default function UpdateRequest(){
                     dispatch({type: 'SET_REQUESTS', payload: json})
                 }
             }
-        } catch (error) {
-            setError(error);
+        } catch (err) {
+            toast.error(err.message);
         }
     }
 
     const handleReset = (e) => {
         e.preventDefault();
-        setError(null);
         setFormData({
             message: '',
             id: ''
@@ -78,12 +72,12 @@ export default function UpdateRequest(){
         <form className="other-forms" onSubmit={handleSubmit} onReset={handleReset}>
             <h3>Update Request</h3>
 
-            <label>Request ID:</label>
+            <label>Request ID(Click the request):</label>
             <input
                 type="text"
                 name="id"
-                onChange={handleInputChange}
-                value={formData.id}
+                disabled
+                value={request_id}
             />
 
             <label>Message:</label>
@@ -95,7 +89,6 @@ export default function UpdateRequest(){
 
             <input className="submit" type="submit" value="Update"/>
             <input className="cancel" type="reset" value="Cancel"/>
-            {error && <div className="error">{error}</div>}
         </form>
      );
 }
