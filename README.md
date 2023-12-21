@@ -1,34 +1,24 @@
 # PMS MERN app
 
-This is a Property Management System app made by Israel, Mekdelawit, Tsegish, Yonatan
+This is a Property Management System app made by Israel, Mekdelawit, Tsegaye and Yonatan
 
 ## Usage
 
-Rename the .envexample file in the backend folder to .env and feel free to modify the properties
+Rename the .envexample file to .env and feel free to modify the properties
 
 ### Install dependencies
 
 ```
 
-# Backend deps
-cd backend
-npm install
+# First install the "concurrently" dependency which is used to run more than one commands simultaneously 
+npm install concurrently
 
-# Frontend deps
-cd frontend
-npm install
+# Then install both frontend and backend deps concurrently
+npm run i
 ```
 
-### Run Server
+### Run Both the Backend and the Frontend concurrently
 
 ```
-cd backend
 npm run dev
-```
-
-### Run client
-
-```
-cd frontend
-npm start
 ```

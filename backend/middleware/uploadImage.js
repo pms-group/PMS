@@ -2,7 +2,7 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 
-const uploadDirectory = './uploads';
+const uploadDirectory = './backend/uploads';
 if (!fs.existsSync(uploadDirectory)) {
   fs.mkdirSync(uploadDirectory);
 }
