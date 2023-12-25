@@ -1,10 +1,10 @@
 import { useState } from "react";
 import {  useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useAuthContext, useRealEstateContext } from "../../../hooks/useContexts";
+import { useAuthContext, useDataContext } from "../../../hooks/useContexts";
 
 export default function AddRealEstate(){
-    const {dispatch} = useRealEstateContext();
+    const {dispatch} = useDataContext();
     const {user} = useAuthContext();
     const navigate = useNavigate();
 

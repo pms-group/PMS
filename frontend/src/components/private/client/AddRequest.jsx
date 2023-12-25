@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify'
-import { useRequestContext, useAuthContext } from "../../../hooks/useContexts";
+import { useDataContext, useAuthContext } from "../../../hooks/useContexts";
 
 export default function AddRequest({apt}){
-    const {dispatch} = useRequestContext();
+    const {dispatch} = useDataContext();
     const {user} = useAuthContext();
     const navigate = useNavigate();
 

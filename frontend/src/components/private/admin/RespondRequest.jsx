@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { toast } from 'react-toastify'
-import { useRequestContext, useAuthContext } from "../../../hooks/useContexts";
+import { useDataContext, useAuthContext } from "../../../hooks/useContexts";
 
 export default function RespondRequest({request_id}){
-    const {dispatch} = useRequestContext();
+    const {dispatch} = useDataContext();
     const {user} = useAuthContext();
 
     const [formData, setFormData] = useState({

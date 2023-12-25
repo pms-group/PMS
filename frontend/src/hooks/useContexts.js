@@ -1,7 +1,5 @@
 import { AuthContext } from '../context/AuthContext';
-import { AptContext } from '../context/AptContext';
-import { RequestContext } from '../context/RequestContext';
-import { RealEstateContext } from '../context/RealEstateContext';
+import { DataContext } from '../context/DataContext';
 import { useContext } from 'react';
 
 export const useAuthContext = () => {
@@ -13,29 +11,11 @@ export const useAuthContext = () => {
     return context;
 };
 
- export const useAptContext = () => {
-    const context = useContext(AptContext);
+ export const useDataContext = () => {
+    const context = useContext(DataContext);
 
     if(!context){
-        throw Error('useAptContext must be used inside an AptContextProvider');
-    }
-    return context;
-};
-
-export const useRequestContext = () => {
-    const context = useContext(RequestContext);
-
-    if(!context){
-        throw Error('useRequestContext must be used inside an RequestContextProvider');
-    }
-    return context;
-};
-
-export const useRealEstateContext = () => {
-    const context = useContext(RealEstateContext);
-
-    if(!context){
-        throw Error('useRealEstateContext must be used inside an RealEstateContextProvider');
+        throw Error('useDataContext must be used inside an DataContextProvider');
     }
     return context;
 };

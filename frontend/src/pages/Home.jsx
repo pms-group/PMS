@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 // contexts
-import { useAuthContext, useRealEstateContext } from "../hooks/useContexts";
+import { useAuthContext, useDataContext } from "../hooks/useContexts";
 
 // components
 import RealEstateInfo from '../components/public/RealEstateInfo';
@@ -15,22 +15,22 @@ export default function Home(){
         navigate(`/realestate_details/${id}`);
     };
 
-    const {realestates} = useRealEstateContext();
+    const {realestates} = useDataContext();
     const {user} = useAuthContext();
     
     return ( 
         <div className={(user?.privilege === 'admin' || user?.privilege === 'superadmin') ? 'home': 'home1'}>
             <div className="realestates">
                 <h2>Real Estates</h2>
-                {realestates?.map(realestate => (
+                {realestates.map(realestate => (
                     <div onClick={() => handleClick(realestate._id)} key={realestate._id} className="links">
                         <RealEstateInfo key={realestate._id} realestate={realestate}/>
                     </div>
                 ))}
             </div>
 
-            {user?.privilege === 'admin' ? <AddApt /> : null }
-            {user?.privilege === 'superadmin' ? <AddRealEstate /> : null }
+            {user?.privilege === 'admin' && <AddApt />}
+            {user?.privilege === 'superadmin' && <AddRealEstate />}
         </div>
 
      );

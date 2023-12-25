@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify'
-import { useAuthContext, useAptContext, useRealEstateContext } from "../hooks/useContexts";
+import { useAuthContext, useDataContext } from "../hooks/useContexts";
 
 // date fns
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
@@ -12,8 +12,7 @@ import AptDetails from "../components/public/AptInfo";
 export default function RealEstateDetail(){
 
     const {user} = useAuthContext();
-    const {apts} = useAptContext();
-    const {realestates, dispatch} = useRealEstateContext();
+    const {apts, realestates, dispatch} = useDataContext();
     const { id } = useParams();
     const navigate = useNavigate();
     
@@ -22,13 +21,11 @@ export default function RealEstateDetail(){
 
 
     useEffect(() => {
-        setRealestate(realestates?.find(realestate => {
+        setRealestate(realestates.find(realestate => {
             return realestate._id === id;
         }));
 
-        setRealestateApts(apts?.filter(apt => {
-            if(apt.realestate_id === id){
-            }
+        setRealestateApts(apts.filter(apt => {
             return apt.realestate_id === id;
         }))
     }, [id, realestates, apts])
@@ -62,12 +59,12 @@ export default function RealEstateDetail(){
                 <p>Email: <strong>{realestate.email}</strong></p>
                 <p>Contact: <strong>{realestate.contact}</strong></p>
 
-                {(user?.privilege === 'superadmin') ? 
+                {(user?.privilege === 'superadmin') && 
                     <div>
                         <p>Created At: <strong>{formatDistanceToNow(new Date(realestate.createdAt), {addSuffix: true})}</strong></p><br />
                         <button onClick={handleDelete}>Remove RealEstate</button>
                     </div> 
-                : null}
+                }
             </div>}
 
             <h2>Apartments Within this RealEstate</h2>

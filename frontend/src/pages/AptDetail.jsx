@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify'
-import { useAuthContext, useAptContext } from "../hooks/useContexts";
+import { useAuthContext, useDataContext } from "../hooks/useContexts";
 
 // date fns
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
@@ -12,7 +12,7 @@ import UpdateApt from "../components/private/admin/UpdateApt";
 
 export default function AptDetail(){
     const {user} = useAuthContext();
-    const {apts, dispatch} = useAptContext();
+    const {apts, dispatch} = useDataContext();
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -20,7 +20,7 @@ export default function AptDetail(){
     const [owner, setOwner] = useState(false);
 
     useEffect(() => {
-        setApt(apts?.find(apt => {
+        setApt(apts.find(apt => {
             return apt._id === id;
         }));
 

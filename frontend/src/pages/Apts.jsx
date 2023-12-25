@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 // contexts
-import { useAuthContext, useAptContext } from '../hooks/useContexts';
+import { useAuthContext, useDataContext } from '../hooks/useContexts';
 
 // components
 import AptInfo from '../components/public/AptInfo'
@@ -17,7 +17,7 @@ export default function Apts(){
     };
 
 
-    const {apts} = useAptContext();
+    const {apts} = useDataContext();
     const {user} = useAuthContext();
 
     return ( 
@@ -25,7 +25,7 @@ export default function Apts(){
 
             <div className="apartments">
                 <h2>Apartments</h2>
-                {apts?.map( apt => (
+                {apts.map( apt => (
                     <div onClick={() => handleClick(apt._id)} key={apt._id} className="links">
                         <AptInfo key={apt._id} apt={apt}/>
                     </div>

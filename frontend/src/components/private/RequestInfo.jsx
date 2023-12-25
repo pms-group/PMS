@@ -1,11 +1,11 @@
 import { toast } from 'react-toastify'
-import { useAuthContext, useRequestContext } from "../../hooks/useContexts";
+import { useAuthContext, useDataContext } from "../../hooks/useContexts";
 
 // date fns
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 
 export default function RequestDetails({ request }){
-    const {dispatch} = useRequestContext();
+    const {dispatch} = useDataContext();
     const {user} = useAuthContext();
 
     const handleDelete = async () => {

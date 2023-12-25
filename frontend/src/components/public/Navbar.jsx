@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { useAuthContext, useRequestContext } from "../../hooks/useContexts";
+import { useAuthContext, useDataContext } from "../../hooks/useContexts";
 
 export default function Navbar(){
     const {user, dispatch: userDispatch} = useAuthContext();
 
-    const {dispatch: requestDispatch} = useRequestContext();
+    const {dispatch: requestDispatch} = useDataContext();
 
     const handleClick = () => {
         localStorage.removeItem('user');

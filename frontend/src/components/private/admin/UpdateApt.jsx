@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { toast } from 'react-toastify'
-import { useAptContext, useAuthContext } from "../../../hooks/useContexts";
+import { useDataContext, useAuthContext } from "../../../hooks/useContexts";
 
 export default function UpdateApt({apt}){
-    const {dispatch} = useAptContext();
+    const {dispatch} = useDataContext();
     const {user} = useAuthContext();
 
     const [formData, setFormData] = useState({
