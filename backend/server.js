@@ -13,7 +13,7 @@ const app = express();
 // middleware
 app.use(express.json());
 app.use(cors());
-app.use('/uploads', express.static('uploads'));
+app.use('/backend/uploads', express.static('backend/uploads'));
 app.use((req, res, next) =>{
     console.log(req.path, req.method);
     next();
