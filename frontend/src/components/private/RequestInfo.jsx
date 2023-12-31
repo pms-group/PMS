@@ -34,7 +34,7 @@ export default function RequestDetails({ request }){
             <p className="status">Status: {request.status}</p>
             {request.reply_message && <p className="status">Response: {request.reply_message}</p>}
             {request.updatedAt ? <p>{formatDistanceToNow(new Date(request.updatedAt), {addSuffix: true})}</p> : <p>just now</p>}
-            {(user.privilege === 'user' && request.status === 'pending') ? <button onClick={handleDelete}>delete request</button> : null}
+            {(user.privilege === 'client' && request.status === 'pending') ? <button onClick={handleDelete}>delete request</button> : null}
         </div>
      );
 }

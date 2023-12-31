@@ -1,25 +1,9 @@
-import { createContext, useReducer, useEffect } from "react";
-import { useAuthContext } from "../hooks/useContexts";
+import { createContext, useReducer } from "react";
 
 export const DataContext = createContext();
 
 export const dataReducer = (state, action) => {
     switch (action.type) {
-        case 'SET_APARTMENTS':
-            return {
-                ...state,
-                apts: action.payload
-            };
-        case 'CREATE_APARTMENT':
-            return {
-                ...state,
-                apts: [action.payload, ...state.apts]
-            };
-        case 'DELETE_APARTMENT':
-            return {
-                ...state,
-                apts: state.apts.filter(apt => apt._id !== action.payload._id)
-            };
         case 'SET_REALESTATES':
             return {
                 ...state,
@@ -28,13 +12,38 @@ export const dataReducer = (state, action) => {
         case 'CREATE_REALESTATE':
             return {
                 ...state,
-                realestates: [action.payload, ...state.realestates]
+                realestates: [action.payload, ...state.realestates || []]
             };
         case 'DELETE_REALESTATE':
             return {
                 ...state,
                 realestates: state.realestates.filter(realestate => realestate._id !== action.payload._id)
             }
+        case 'SET_APARTMENTS':
+            return {
+                ...state,
+                apts: action.payload
+            };
+        case 'CREATE_APARTMENT':
+            return {
+                ...state,
+                apts: [action.payload, ...state.apts || []]
+            };
+        case 'UPDATE_APARTMENT':
+            return {
+                ...state,
+                apts: state.apts.map(apt =>{
+                    if(apt._id === action.payload._id){
+                        return action.payload
+                    }
+                    return apt;
+                })
+            };
+        case 'DELETE_APARTMENT':
+            return {
+                ...state,
+                apts: state.apts.filter(apt => apt._id !== action.payload._id)
+            };
         case 'SET_REQUESTS':
             return {
                 ...state,
@@ -43,7 +52,17 @@ export const dataReducer = (state, action) => {
         case 'CREATE_REQUEST':
             return {
                 ...state,
-                requests: [action.payload, ...state.requests]
+                requests: [action.payload, ...state.requests || []]
+            };
+        case 'UPDATE_REQUEST':
+            return {
+                ...state,
+                requests: state.requests.map(request =>{
+                    if(request._id === action.payload._id){
+                        return action.payload
+                    }
+                    return request;
+                })
             };
         case 'DELETE_REQUEST':
             return {
@@ -61,75 +80,6 @@ export const DataContextProvider = ({children}) => {
         realestates: [],
         requests: []
     });
-
-    const {user} = useAuthContext();
-
-    useEffect(() => {
-        const fetchApartments = async () => {
-            const response = await fetch('/api/apartments');
-            const json = await response.json();
-            if(response.ok){
-                dispatch({type: 'SET_APARTMENTS', payload: json});
-            }
-        };
-
-        const fetchRealEstates = async () => {
-            const response = await fetch('/api/user/view_realestates');
-            const json = await response.json();
-            if(response.ok){
-                dispatch({type: 'SET_REALESTATES', payload: json});
-            }
-        };
-
-        const fetchAllRequests = async () => {
-            const response = await fetch('/api/requests', {
-                headers: {
-                    'Authorization': `Bearer ${user.token}`
-                }
-            });
-            const json = await response.json();
-
-            if(response.ok){
-                dispatch({type: 'SET_REQUESTS', payload: json});
-            }
-        };
-
-        const fetchClientRequests = async () => {
-            const response = await fetch('/api/requests/client_requests', {
-                headers: {
-                    'Authorization': `Bearer ${user.token}`
-                }
-            });
-            const json = await response.json();
-
-            if(response.ok){
-                dispatch({type: 'SET_REQUESTS', payload: json});
-            }
-        };
-
-        const fetchAdminRequests = async () => {
-            const response = await fetch('/api/requests/realestate_requests', {
-                headers: {
-                    'Authorization': `Bearer ${user.token}`
-                }
-            });
-            const json = await response.json();
-
-            if(response.ok){
-                dispatch({type: 'SET_REQUESTS', payload: json});
-            }
-        };
-
-        fetchRealEstates();
-        fetchApartments();
-        if(user?.privilege === 'superadmin'){
-            fetchAllRequests();
-        } else if(user?.privilege === 'admin'){
-            fetchAdminRequests();
-        } else if(user?.privilege === 'user'){
-            fetchClientRequests();
-        }
-    }, [dispatch, user])
 
     return(
         <DataContext.Provider value={{...state, dispatch}}>

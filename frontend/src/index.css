@@ -269,3 +269,25 @@ textarea{
   grid-template-columns: 3fr 1fr;
   gap: 50px
 }
+
+/* page pagination section */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pagination button {
+  background: #fff;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  font-family: "Poppins";
+  cursor: pointer;
+  font-size: 1em;
+}
+.pagination .active button {
+  border: 3px solid darkgreen;
+}
+.pagination .arrows button{
+  border: none;
+}

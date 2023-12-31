@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 
 // GET all requests for super admin
 const getRequests = async (req, res) => {
-    const requests = await Request.find().sort({createdAt: -1});
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 4;
+    const requests = await Request.find().sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
     const result = await Promise.all(
         requests.map(async request => {
             const apartment = await Apartment.findById(request.apartment_id);
@@ -16,13 +18,18 @@ const getRequests = async (req, res) => {
             return request;
         })
     );
+    const documentsCount = await Request.countDocuments();
+    res.set('X-Total-Count', documentsCount);
+    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
     res.status(200).json(result);
 }
 
 // GET all requests for admin within own realestate
 const getRealEstateRequests = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 4;
     const _id = req.user._id.toString();
-    const requests = await Request.find({realestate_id: _id}).sort({createdAt: -1});
+    const requests = await Request.find({realestate_id: _id}).sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
     const result = await Promise.all(
         requests.map(async request => {
             const apartment = await Apartment.findById(request.apartment_id);
@@ -33,13 +40,18 @@ const getRealEstateRequests = async (req, res) => {
             return request;
         })
     );
+    const documentsCount = await Request.countDocuments({realestate_id: _id});
+    res.set('X-Total-Count', documentsCount);
+    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
     res.status(200).json(result);
 }
 
 // GET all requests for client
 const getClientRequests = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 4;
     const _id = req.user._id.toString();
-    const requests = await Request.find({client_id: _id}).sort({createdAt: -1});
+    const requests = await Request.find({client_id: _id}).sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
     const result = await Promise.all(
         requests.map(async request => {
             const apartment = await Apartment.findById(request.apartment_id);
@@ -50,6 +62,9 @@ const getClientRequests = async (req, res) => {
             return request;
         })
     );
+    const documentsCount = await Request.countDocuments({client_id: _id});
+    res.set('X-Total-Count', documentsCount);
+    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
     res.status(200).json(result);
 }
 
@@ -104,7 +119,12 @@ const updateClientRequest = async (req, res) => {
         return res.status(400).json({error: 'Only pending requests can be modified'});
     }
 
-    const request = await Request.findByIdAndUpdate(id, {message});
+    const request = await Request.findByIdAndUpdate(id, {message}, {new: true});
+    const apartment = await Apartment.findById(request.apartment_id);
+    const realestate = await User.findById(request.realestate_id);
+    request.realestate_name = apartment ? realestate.fullname : request.realestate_name;
+    const client_name = (await User.findById(request.client_id)).fullname;
+    request.client_name = client_name;
     res.status(200).json(request);
 }
 
@@ -152,9 +172,9 @@ const updateRealEstateRequest = async (req, res) =>{
         return res.status(400).json({error: 'Only pending requests can be replied to'});
     }
 
-    const request = await Request.findByIdAndUpdate(id, req.body);
+    const request = await Request.findByIdAndUpdate(id, req.body, {new: true});
+    const apartment = await Apartment.findById(request.apartment_id);
     if(status === 'accepted'){
-        const apartment = await Apartment.findById(request.apartment_id);
         if(!apartment){
             return res.status(400).json({error: 'Apartment not found'});
         }
@@ -163,6 +183,10 @@ const updateRealEstateRequest = async (req, res) =>{
         }
         await Apartment.findByIdAndUpdate(request.apartment_id, {$inc: {available: -1}});
     }
+    const realestate = await User.findById(request.realestate_id);
+    request.realestate_name = apartment ? realestate.fullname : request.realestate_name;
+    const client_name = (await User.findById(request.client_id)).fullname;
+    request.client_name = client_name;
     res.status(200).json(request);
 }
 

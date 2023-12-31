@@ -23,7 +23,7 @@ const loginUser = async (req, res) => {
         return res.status(400).json({error: 'Fill out all blanks', emptyFields});
     }
 
-    const user = await User.findOne({username});
+    const user = await User.findOne({username})
     if(!user){
         return res.status(400).json({error: 'Incorrect Username', emptyFields: ['username']});
     }
@@ -44,8 +44,7 @@ const loginUser = async (req, res) => {
     const privilege = user.privilege;
     const _id = user._id;
     const imageUrl = user.imageUrl;
-
-    res.status(200).json({username, fullname, email, contact, address, description, gender, privilege, imageUrl, _id, token});
+    res.status(200).json({username, fullname, email, contact, address, description, gender, privilege, _id, imageUrl, token});
 };
 
 // client signup route
@@ -272,8 +271,18 @@ const deleteAdmin = async (req, res) => {
 // get admin route
 const getAdmins = async (req, res) => {
     const privilege = 'admin'
-    const admins = await User.find({privilege}).select('-password').sort({createdAt: -1});
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 3;
+    const _id = req.query.id;
+    if(_id){
+        const admin = await User.findOne({_id, privilege}).select('-username -password');
+        return res.status(200).json(admin);
+    }
+    const admins = await User.find({privilege}).select('-username -password').sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
 
+    const documentsCount = await User.countDocuments({privilege});
+    res.set('X-Total-Count', documentsCount);
+    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
     res.status(200).json(admins);
 }
 

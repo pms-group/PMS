@@ -18,7 +18,7 @@ const requireClientAuth = async (req, res, next) => {
         req.user = await User.findOne({_id}).select('privilege');
         req.user._id = _id;
 
-        if(req.user.privilege !== 'user'){
+        if(req.user.privilege !== 'client'){
             return res.status(401).json({error: 'Unauthorized privilege'});
         }
         next();

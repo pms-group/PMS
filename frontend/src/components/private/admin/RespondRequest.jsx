@@ -35,29 +35,19 @@ export default function RespondRequest({request_id}){
                     'Content-Type': 'application/json'
                 }
             });
-            const res = await response.json();
+            const json = await response.json();
     
             if(!response.ok){
-                toast.error(res.error);
+                toast.error(json.error);
             }
             if(response.ok){
                 toast.success('Responded a request successfully');
+                dispatch({type: 'UPDATE_REQUEST', payload: json})
                 setFormData({
                     reply_message: '',
                     status: 'accepted',
                     id: ''
                 });
-    
-                const update = await fetch('/api/requests/realestate_requests', {
-                    headers: {
-                        'Authorization': `Bearer ${user.token}`
-                    }
-                });
-                const json = await update.json();
-    
-                if(update.ok){
-                    dispatch({type: 'SET_REQUESTS', payload: json})
-                }
             }
         } catch (err) {
             toast.error(err.message);

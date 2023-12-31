@@ -26,7 +26,7 @@ const userSchema = new Schema({
     privilege: {
         type: String,
         required: true,
-        default: 'user'
+        default: 'client'
     },
     imageUrl: {
         type: String,

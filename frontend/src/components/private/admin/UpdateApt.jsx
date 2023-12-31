@@ -1,8 +1,9 @@
 import { useState } from "react";
+
 import { toast } from 'react-toastify'
 import { useDataContext, useAuthContext } from "../../../hooks/useContexts";
 
-export default function UpdateApt({apt}){
+export default function UpdateApt({apt, onAptChange}){
     const {dispatch} = useDataContext();
     const {user} = useAuthContext();
 
@@ -57,25 +58,19 @@ export default function UpdateApt({apt}){
                 setEmptyFields(json.emptyFields);
             }
             if(response.ok){
-                
                 toast.success('Updated an apartment successfully');
-                const update = await fetch('/api/apartments');
-                const json = await update.json();
-    
-                if(update.ok){
-                    dispatch({type: 'SET_APARTMENTS', payload: json});
-                    setFormData({
-                        bedrooms: '',
-                        bathrooms: '',
-                        type: '',
-                        price: '',
-                        available: '',
-                        description: '',
-                        removePics: false,
-                        images: []
-                    });
-                    setEmptyFields([]);
-                }
+                dispatch({type: 'UPDATE_APARTMENT', payload: json});
+                setFormData({
+                    bedrooms: '',
+                    bathrooms: '',
+                    type: '',
+                    price: '',
+                    available: '',
+                    description: '',
+                    removePics: false,
+                    images: []
+                });
+                onAptChange(json);
             } 
         } catch (err) {
             toast.error(err.message);

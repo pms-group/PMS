@@ -32,28 +32,18 @@ export default function UpdateRequest({request_id}){
                     'Authorization': `Bearer ${user.token}`
                 }
             });
-            const res = await response.json();
+            const json = await response.json();
     
             if(!response.ok){
-                toast.error(res.error)
+                toast.error(json.error)
             }
             if(response.ok){
                 toast.success('Updated a request successfully');
+                dispatch({type: 'UPDATE_REQUEST', payload: json})
                 setFormData({
                     message: '',
                     id: ''
                 });
-    
-                const update = await fetch('/api/requests/client_requests', {
-                    headers: {
-                        'Authorization': `Bearer ${user.token}`
-                    }
-                });
-                const json = await update.json();
-    
-                if(update.ok){
-                    dispatch({type: 'SET_REQUESTS', payload: json})
-                }
             }
         } catch (err) {
             toast.error(err.message);

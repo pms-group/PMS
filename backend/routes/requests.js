@@ -11,7 +11,7 @@ const requestController = require('../controllers/requestController');
 const router = express.Router();
 
 // GET all requests for super admin
-router.get('/',requireSuperAuth, requestController.getRequests);
+router.get('/superadmin_requests',requireSuperAuth, requestController.getRequests);
 
 // GET all requests for admin within own realestate
 router.get('/realestate_requests',requireAdminAuth, requestController.getRealEstateRequests);

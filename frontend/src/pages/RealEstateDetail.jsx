@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify'
 import { useAuthContext, useDataContext } from "../hooks/useContexts";
@@ -12,23 +12,45 @@ import AptDetails from "../components/public/AptInfo";
 export default function RealEstateDetail(){
 
     const {user} = useAuthContext();
-    const {apts, realestates, dispatch} = useDataContext();
+    const {dispatch} = useDataContext();
     const { id } = useParams();
-    const navigate = useNavigate();
-    
     const [realestate, setRealestate] = useState(null);
     const [realestateApts, setRealestateApts] = useState([]);
 
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
+    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
-        setRealestate(realestates.find(realestate => {
-            return realestate._id === id;
-        }));
+        const fetchRealEstate = async () => {
+            const response = await fetch(`/api/user/view_realestates?id=${id}`);
+            const json = await response.json();
+            if(response.ok){
+                setRealestate(json);
+            }
+        };
 
-        setRealestateApts(apts.filter(apt => {
-            return apt.realestate_id === id;
-        }))
-    }, [id, realestates, apts])
+        const fetchRealEstateApts = async () => {
+            const response = await fetch(`/api/apartments/realestate_apartments?page=${currentPage}&id=${realestate?._id}`);
+            const json = await response.json();
+            if(response.ok){
+                setTotalPages(Number(response.headers.get('X-Total-Pages')));
+                if(currentPage > Number(response.headers.get('X-Total-Pages'))){
+                    const response = await fetch(`/api/apartments/realestate_apartments?id=${realestate?._id}`);
+                    const json = await response.json();
+                    setCurrentPage(1);
+                    setSearchParams({page: 1});
+                    setRealestateApts(json);
+                    return
+                }
+                setRealestateApts(json);
+            }
+        };
+
+        fetchRealEstate();
+        realestate?._id && fetchRealEstateApts();
+    }, [currentPage, id, realestate?._id, setSearchParams])
 
     const handleDelete = async () => {
         const response = await fetch(`/api/user/remove_realEstate/${realestate._id}`, {
@@ -50,6 +72,23 @@ export default function RealEstateDetail(){
     const handleClick = (id) => {
         navigate(`/apartment_details/${id}`);
     };
+
+    const handlePageClick = (page) => {
+        setCurrentPage(page);
+        setSearchParams({page});
+    }
+
+    const renderPageNumbers = () => {
+        const pages = [];
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(
+            <label key={i} className={i === currentPage ? 'active' : ''}>
+              <button onClick={() => handlePageClick(i)}>{i}</button>
+            </label>
+          );
+        }
+        return pages;
+      };
 
     return ( 
         <div className="realestatedetail-page">
@@ -76,6 +115,16 @@ export default function RealEstateDetail(){
                 )) : <h3>No apartment listed by this realestate</h3> }
 
             </div>
+
+            {totalPages > 1 && <div className="pagination">
+                <label className="arrows"><button onClick={() => currentPage > 1 && handlePageClick(currentPage - 1)}>
+                    &lt;
+                </button></label>
+                {renderPageNumbers()}
+                <label className="arrows"><button onClick={() => currentPage < totalPages && handlePageClick(currentPage + 1)}>
+                    &gt;
+                </button></label>
+            </div>}
         </div>
      );
 }

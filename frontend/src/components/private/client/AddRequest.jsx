@@ -45,8 +45,8 @@ export default function AddRequest({apt}){
             if(response.ok){
                 toast.success('Added a request successfully')
                 setFormData({ ...formData, message: ''});
-                dispatch({type: 'CREATE_REQUEST', payload: res});
                 navigate('/requests');
+                dispatch({type: 'CREATE_REQUEST', payload: res});
             }
         } catch (err) {
             toast.error(err.message);
@@ -58,8 +58,7 @@ export default function AddRequest({apt}){
         e.preventDefault();
         setFormData({ ...formData, message: ''})
     }
-
-
+    
     return ( 
         <form className="other-forms" onSubmit={handleSubmit} onReset={handleReset}>
             <h3>Add Request</h3>

@@ -31,6 +31,9 @@ export default function AddApt(){
         setEmptyFields([]);
 
         const {images} = formData;
+        if(images.length > 5){
+            return toast.error('You can only upload upto 5 images');
+        }
         const data = new FormData();
         Array.from(images).forEach((image) => data.append('images', image))
         for(let key in formData){

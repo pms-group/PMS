@@ -8,27 +8,44 @@ const fs = require('fs');
 
 // GET all apartments
 const getApartments = async (req, res) => {
-    const apartments = await Apartment.find().sort({createdAt: -1});
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 4;
+    const _id = req.query.id;
+    if(_id){
+        const apartment = await Apartment.findById(_id);
+        const realestate_name = (await User.findById(apartment.realestate_id)).fullname;
+        apartment.realestate_name = realestate_name;
+        return res.status(200).json(apartment);
+    }
+    const apartments = await Apartment.find().sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
     const result = await Promise.all(
         apartments.map(async apartment => {
             const realestate_name = (await User.findById(apartment.realestate_id)).fullname;
             apartment.realestate_name = realestate_name;
             return apartment;
         })
-    )
+    );
+    const documentsCount = await Apartment.countDocuments();
+    res.set('X-Total-Count', documentsCount);
+    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
     res.status(200).json(result);
 }
 
 // GET one realestate's apartments
 const getAdminApartments = async (req, res) => {
-    const _id = req.user._id.toString();
-    const apartments = await Apartment.find({realestate_id: _id}).sort({createdAt: -1});
+    const _id = req.query.id;
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 4;
+    const apartments = await Apartment.find({realestate_id: _id}).sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
 
     const realestate_name = (await User.findById(_id)).fullname;
     const result = apartments.map(apartment => {
         apartment.realestate_name = realestate_name;
         return apartment;
     });
+    const documentsCount = await Apartment.countDocuments({realestate_id: _id});
+    res.set('X-Total-Count', documentsCount);
+    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
     res.status(200).json(result);
 }
 
@@ -109,7 +126,9 @@ const updateApartment = async (req, res) => {
             req.files.forEach((file) => imageUrls.push(file.path));
         }
 
-        const apartment = await Apartment.findByIdAndUpdate(_id, {bedrooms, bathrooms, type, price, available, imageUrls, description});
+        const apartment = await Apartment.findByIdAndUpdate(_id, {bedrooms, bathrooms, type, price, available, imageUrls, description}, {new: true});
+        const realestate_name = (await User.findById(apartment.realestate_id)).fullname;
+        apartment.realestate_name = realestate_name;
         res.status(200).json(apartment);
     });
     
