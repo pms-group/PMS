@@ -1,4 +1,5 @@
-import { createContext, useReducer } from "react";
+import { createContext, useReducer, useEffect } from "react";
+import { useAuthContext } from "../hooks/useContexts";
 
 export const DataContext = createContext();
 
@@ -80,6 +81,60 @@ export const DataContextProvider = ({children}) => {
         realestates: [],
         requests: []
     });
+
+    const {user, realestatesCurrentPage, apartmentsCurrentPage, requestsCurrentPage, dispatch: pageDispatch} = useAuthContext();
+
+    useEffect(() => {
+        const fetchRealEstates = async () => {
+            const response = await fetch(`/api/user/view_realestates?page=${realestatesCurrentPage}`);
+            const json = await response.json();
+            if(response.ok){
+                pageDispatch({type: 'SET_REALESTATES_TOTALPAGE', payload: Number(response.headers.get('X-Total-Pages'))});
+                dispatch({type: 'SET_REALESTATES', payload: json});
+            }
+        };
+
+        fetchRealEstates();
+    }, [pageDispatch, realestatesCurrentPage]);
+
+    useEffect(() => {
+        const fetchApartments = async () => {
+            const response = await fetch(`/api/apartments?page=${apartmentsCurrentPage}`);
+            const json = await response.json();
+            if(response.ok){
+                pageDispatch({type: 'SET_APARTMENTS_TOTALPAGE', payload: Number(response.headers.get('X-Total-Pages'))});
+                dispatch({type: 'SET_APARTMENTS', payload: json});
+            }
+        };
+
+        fetchApartments();
+    }, [apartmentsCurrentPage, pageDispatch]);
+
+    useEffect(() => {
+        const fetchRequests = async () => {
+            let requestType
+            switch(user?.privilege){
+                case 'client':
+                    requestType = 'client_requests';
+                    break;
+                case 'admin':
+                    requestType = 'realestate_requests';
+                    break;
+                default :
+                    requestType = 'superadmin_requests';
+                }
+            const response = await fetch(`/api/requests/${requestType}?page=${requestsCurrentPage}`, {
+                headers: {'Authorization': `Bearer ${user?.token}`}
+            });
+            const json = await response.json();
+            if(response.ok){
+                pageDispatch({type: 'SET_REQUESTS_TOTALPAGE', payload: Number(response.headers.get('X-Total-Pages'))});
+                dispatch({type: 'SET_REQUESTS', payload: json});
+            }
+        };
+
+        user?.privilege && fetchRequests()
+    }, [pageDispatch, requestsCurrentPage, user?.privilege, user?.token]);
 
     return(
         <DataContext.Provider value={{...state, dispatch}}>

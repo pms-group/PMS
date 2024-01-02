@@ -8,7 +8,7 @@ const fs = require('fs');
 
 // GET all apartments
 const getApartments = async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
+    let currentPage = parseInt(req.query.page) || 1;
     const pageSize = 4;
     const _id = req.query.id;
     if(_id){
@@ -17,35 +17,54 @@ const getApartments = async (req, res) => {
         apartment.realestate_name = realestate_name;
         return res.status(200).json(apartment);
     }
-    const apartments = await Apartment.find().sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
-    const result = await Promise.all(
-        apartments.map(async apartment => {
-            const realestate_name = (await User.findById(apartment.realestate_id)).fullname;
-            apartment.realestate_name = realestate_name;
-            return apartment;
-        })
-    );
+
     const documentsCount = await Apartment.countDocuments();
+    const totalPage = Math.ceil(documentsCount / pageSize);
+    let result;
+    if(currentPage > totalPage){
+        currentPage = 1;
+        result = []
+    } else{
+        const apartments = await Apartment.find().sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+        result = await Promise.all(
+            apartments.map(async apartment => {
+                const realestate_name = (await User.findById(apartment.realestate_id)).fullname;
+                apartment.realestate_name = realestate_name;
+                return apartment;
+            })
+        );
+    }
+    
+    res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);
-    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
+    res.set('X-Total-Pages', totalPage);
     res.status(200).json(result);
 }
 
 // GET one realestate's apartments
 const getAdminApartments = async (req, res) => {
     const _id = req.query.id;
-    const page = parseInt(req.query.page) || 1;
+    let currentPage = parseInt(req.query.page) || 1;
     const pageSize = 4;
-    const apartments = await Apartment.find({realestate_id: _id}).sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
 
-    const realestate_name = (await User.findById(_id)).fullname;
-    const result = apartments.map(apartment => {
-        apartment.realestate_name = realestate_name;
-        return apartment;
-    });
     const documentsCount = await Apartment.countDocuments({realestate_id: _id});
+    const totalPage = Math.ceil(documentsCount / pageSize);
+    let result;
+    if(currentPage > totalPage){
+        currentPage = 1;
+        result = []
+    } else{
+        const apartments = await Apartment.find({realestate_id: _id}).sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+        const realestate_name = (await User.findById(_id)).fullname;
+        result = apartments.map(apartment => {
+            apartment.realestate_name = realestate_name;
+            return apartment;
+        });
+    }
+    
+    res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);
-    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
+    res.set('X-Total-Pages', totalPage);
     res.status(200).json(result);
 }
 

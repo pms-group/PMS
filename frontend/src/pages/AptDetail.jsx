@@ -13,7 +13,7 @@ import UpdateApt from "../components/private/admin/UpdateApt";
 export default function AptDetail(){
     const {user} = useAuthContext();
     const {dispatch} = useDataContext();
-    const { id } = useParams();
+    const {id} = useParams();
     const navigate = useNavigate();
 
     const [apt, setApt] = useState(null);
@@ -27,10 +27,13 @@ export default function AptDetail(){
                 setApt(json);
             }
         };
-
+        console.log(id)
         fetchApt();
-        setOwner(user?._id === apt?.realestate_id ? true : false)
-    }, [id, apt?.realestate_id, user?._id]);
+    }, [id]);
+
+    useEffect(() => {
+        setOwner(user?._id === apt?.realestate_id ? true : false);
+    }, [apt?.realestate_id, user?._id])
 
     const handleDelete = async () => {
         const response = await fetch(`/api/apartments/${id}`, {

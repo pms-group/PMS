@@ -271,18 +271,27 @@ const deleteAdmin = async (req, res) => {
 // get admin route
 const getAdmins = async (req, res) => {
     const privilege = 'admin'
-    const page = parseInt(req.query.page) || 1;
-    const pageSize = 3;
+    let currentPage = parseInt(req.query.page) || 1;
+    const pageSize = 1;
     const _id = req.query.id;
     if(_id){
         const admin = await User.findOne({_id, privilege}).select('-username -password');
         return res.status(200).json(admin);
     }
-    const admins = await User.find({privilege}).select('-username -password').sort({createdAt: -1}).skip((page - 1) * pageSize).limit(pageSize);
 
     const documentsCount = await User.countDocuments({privilege});
+    const totalPage = Math.ceil(documentsCount / pageSize);
+    let admins;
+    if(currentPage > totalPage){
+        currentPage = 1;
+        admins = []
+    } else{
+        admins = await User.find({privilege}).select('-username -password').sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+    }
+
+    res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);
-    res.set('X-Total-Pages', Math.ceil(documentsCount / pageSize));
+    res.set('X-Total-Pages', totalPage);
     res.status(200).json(admins);
 }
 

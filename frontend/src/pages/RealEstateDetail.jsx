@@ -36,14 +36,7 @@ export default function RealEstateDetail(){
             const json = await response.json();
             if(response.ok){
                 setTotalPages(Number(response.headers.get('X-Total-Pages')));
-                if(currentPage > Number(response.headers.get('X-Total-Pages'))){
-                    const response = await fetch(`/api/apartments/realestate_apartments?id=${realestate?._id}`);
-                    const json = await response.json();
-                    setCurrentPage(1);
-                    setSearchParams({page: 1});
-                    setRealestateApts(json);
-                    return
-                }
+                setCurrentPage(Number(response.headers.get('X-Current-Page')));
                 setRealestateApts(json);
             }
         };

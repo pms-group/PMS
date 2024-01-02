@@ -1,5 +1,5 @@
+import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 
 // contexts
 import { useAuthContext, useDataContext } from '../hooks/useContexts';
@@ -14,44 +14,25 @@ export default function Apts(){
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const {apts, dispatch} = useDataContext();
-    const {user} = useAuthContext();
-    const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
-    const [totalPages, setTotalPages] = useState(1);
+    const {apts} = useDataContext();
+    const {user, apartmentsCurrentPage: currentPage, apartmentsTotalPage: totalPage, dispatch: pageDispatch} = useAuthContext();
 
     useEffect(() => {
-        const fetchApartments = async () => {
-            const response = await fetch(`/api/apartments?page=${currentPage}`);
-            const json = await response.json();
-            if(response.ok){
-                setTotalPages(Number(response.headers.get('X-Total-Pages')));
-                if(currentPage > Number(response.headers.get('X-Total-Pages'))){
-                    const response = await fetch(`/api/apartments`);
-                    const json = await response.json();
-                    setCurrentPage(1);
-                    setSearchParams({page: 1});
-                    dispatch({type: 'SET_APARTMENTS', payload: json});
-                    return
-                }
-                dispatch({type: 'SET_APARTMENTS', payload: json});
-            }
-        };
-
-        fetchApartments();
-    }, [currentPage, dispatch, setSearchParams]);
+        pageDispatch({type: 'SET_APARTMENTS_CURRENTPAGE', payload: Number(searchParams.get('page')) || 1});
+    }, [pageDispatch, searchParams]);
 
     const handleClick = (id) => {
         navigate(`/apartment_details/${id}`);
     };
 
     const handlePageClick = (page) => {
-        setCurrentPage(page);
+        pageDispatch({type: 'SET_APARTMENTS_CURRENTPAGE', payload: page});
         setSearchParams({page});
     }
 
     const renderPageNumbers = () => {
         const pages = [];
-        for (let i = 1; i <= totalPages; i++) {
+        for (let i = 1; i <= totalPage; i++) {
           pages.push(
             <label key={i} className={i === currentPage ? 'active' : ''}>
               <button onClick={() => handlePageClick(i)}>{i}</button>
@@ -77,12 +58,12 @@ export default function Apts(){
             {user?.privilege === 'admin' && <AddApt />}
             {user?.privilege === 'superadmin' && <AddRealEstate />}
 
-            {totalPages > 1 &&<div className="pagination">
+            {totalPage > 1 &&<div className="pagination">
                 <label className="arrows"><button onClick={() => currentPage > 1 && handlePageClick(currentPage - 1)}>
                     &lt;
                 </button></label>
                 {renderPageNumbers()}
-                <label className="arrows"><button onClick={() => currentPage < totalPages && handlePageClick(currentPage + 1)}>
+                <label className="arrows"><button onClick={() => currentPage < totalPage && handlePageClick(currentPage + 1)}>
                     &gt;
                 </button></label>
             </div>}
