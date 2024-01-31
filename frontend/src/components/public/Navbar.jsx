@@ -13,7 +13,7 @@ export default function Navbar(){
         userDispatch({type: 'LOGOUT'});
 
         // dispatch SET_REQUEST action
-        requestDispatch({type: 'SET_REQUESTS', payload: null});
+        requestDispatch({type: 'SET_REQUESTS', payload: []});
 
     }
 

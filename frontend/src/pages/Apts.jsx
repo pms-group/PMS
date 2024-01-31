@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // contexts
@@ -14,25 +14,31 @@ export default function Apts(){
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const {apts} = useDataContext();
-    const {user, apartmentsCurrentPage: currentPage, apartmentsTotalPage: totalPage, dispatch: pageDispatch} = useAuthContext();
+    const {apts, aptsCurrentPage: currentPage, aptsTotalPages: totalPages, setCurrentPage} = useDataContext();
+    const {user} = useAuthContext();
 
     useEffect(() => {
-        pageDispatch({type: 'SET_APARTMENTS_CURRENTPAGE', payload: Number(searchParams.get('page')) || 1});
-    }, [pageDispatch, searchParams]);
+        const page = parseInt(searchParams.get('page')) || 1;
+        page !== currentPage && setCurrentPage('APTS', page);
+    }, [currentPage, searchParams, setCurrentPage]);
+
+    useEffect(() => {
+        if(totalPages < 0){
+            setSearchParams({page: 1});
+        }
+    }, [setSearchParams, totalPages]);
 
     const handleClick = (id) => {
         navigate(`/apartment_details/${id}`);
     };
 
     const handlePageClick = (page) => {
-        pageDispatch({type: 'SET_APARTMENTS_CURRENTPAGE', payload: page});
         setSearchParams({page});
     }
 
     const renderPageNumbers = () => {
         const pages = [];
-        for (let i = 1; i <= totalPage; i++) {
+        for (let i = 1; i <= totalPages; i++) {
           pages.push(
             <label key={i} className={i === currentPage ? 'active' : ''}>
               <button onClick={() => handlePageClick(i)}>{i}</button>
@@ -58,12 +64,12 @@ export default function Apts(){
             {user?.privilege === 'admin' && <AddApt />}
             {user?.privilege === 'superadmin' && <AddRealEstate />}
 
-            {totalPage > 1 &&<div className="pagination">
+            {totalPages > 1 &&<div className="pagination">
                 <label className="arrows"><button onClick={() => currentPage > 1 && handlePageClick(currentPage - 1)}>
                     &lt;
                 </button></label>
                 {renderPageNumbers()}
-                <label className="arrows"><button onClick={() => currentPage < totalPage && handlePageClick(currentPage + 1)}>
+                <label className="arrows"><button onClick={() => currentPage < totalPages && handlePageClick(currentPage + 1)}>
                     &gt;
                 </button></label>
             </div>}

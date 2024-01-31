@@ -12,21 +12,28 @@ export default function Requests(){
     const [id, setId] = useState('');
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const {requests} = useDataContext();
-    const {user, requestsCurrentPage: currentPage, requestsTotalPage: totalPage, dispatch: pageDispatch} = useAuthContext();
+    const {requests, requestsCurrentPage: currentPage, requestsTotalPages: totalPages, setCurrentPage} = useDataContext();
+    const {user} = useAuthContext();
 
-useEffect(() => {
-    pageDispatch({type: 'SET_REQUESTS_CURRENTPAGE', payload: Number(searchParams.get('page')) || 1});
-}, [pageDispatch, searchParams])
+    useEffect(() => {
+        const page = parseInt(searchParams.get('page')) || 1;
+        page !== currentPage && setCurrentPage('REQUESTS', page);
+    }, [currentPage, searchParams, setCurrentPage]);
+
+    useEffect(() => {
+        if(totalPages < 0){
+            setSearchParams({page: 1});
+        }
+    }, [setSearchParams, totalPages]);
 
     const handlePageClick = (page) => {
-        pageDispatch({type: 'SET_REQUESTS_CURRENTPAGE', payload: page});
         setSearchParams({page});
+        setId('');
     }
 
     const renderPageNumbers = () => {
         const pages = [];
-        for (let i = 1; i <= totalPage; i++) {
+        for (let i = 1; i <= totalPages; i++) {
           pages.push(
             <label key={i} className={i === currentPage ? 'active' : ''}>
               <button onClick={() => handlePageClick(i)}>{i}</button>
@@ -52,12 +59,12 @@ useEffect(() => {
             {requests.length > 0 && user.privilege === 'admin' && <RespondRequest request_id={id}/>}
             {requests.length > 0 && user.privilege === 'client' && <UpdateRequest request_id={id}/>}
 
-            {totalPage > 1 && <div className="pagination">
+            {totalPages > 1 && <div className="pagination">
                 <label className="arrows"><button onClick={() => currentPage > 1 && handlePageClick(currentPage - 1)}>
                     &lt;
                 </button></label>
                 {renderPageNumbers()}
-                <label className="arrows"><button onClick={() => currentPage < totalPage && handlePageClick(currentPage + 1)}>
+                <label className="arrows"><button onClick={() => currentPage < totalPages && handlePageClick(currentPage + 1)}>
                     &gt;
                 </button></label>
             </div>  }            

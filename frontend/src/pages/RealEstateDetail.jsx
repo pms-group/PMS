@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import {  useEffect } from 'react';
 import { toast } from 'react-toastify'
 import { useAuthContext, useDataContext } from "../hooks/useContexts";
 
@@ -10,43 +10,41 @@ import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import AptDetails from "../components/public/AptInfo";
 
 export default function RealEstateDetail(){
-
-    const {user} = useAuthContext();
-    const {dispatch} = useDataContext();
-    const { id } = useParams();
-    const [realestate, setRealestate] = useState(null);
-    const [realestateApts, setRealestateApts] = useState([]);
-
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
-    const [totalPages, setTotalPages] = useState(1);
+
+    const {realestateInfo, realestateApts, realestateAptsCurrentPage: currentPage, realestateAptsTotalPages: totalPages, setCurrentPage, dispatch} = useDataContext();
+    const {user} = useAuthContext();
+    const { id } = useParams();
 
     useEffect(() => {
         const fetchRealEstate = async () => {
             const response = await fetch(`/api/user/view_realestates?id=${id}`);
             const json = await response.json();
             if(response.ok){
-                setRealestate(json);
+                dispatch({type: 'SET_REALESTATEINFO', payload: json});
             }
-        };
-
-        const fetchRealEstateApts = async () => {
-            const response = await fetch(`/api/apartments/realestate_apartments?page=${currentPage}&id=${realestate?._id}`);
-            const json = await response.json();
-            if(response.ok){
-                setTotalPages(Number(response.headers.get('X-Total-Pages')));
-                setCurrentPage(Number(response.headers.get('X-Current-Page')));
-                setRealestateApts(json);
+            if(!response.ok){
+                toast.error(json.error);
             }
         };
 
         fetchRealEstate();
-        realestate?._id && fetchRealEstateApts();
-    }, [currentPage, id, realestate?._id, setSearchParams])
+    }, [dispatch, id]);
+
+    useEffect(() => {
+        const page = parseInt(searchParams.get('page')) || 1;
+        page !== currentPage && setCurrentPage('REALESTATEAPTS', page);
+    }, [currentPage, searchParams, setCurrentPage]);
+
+    useEffect(() => {
+        if(totalPages < 0){
+            setSearchParams({page: 1});
+        }
+    }, [setSearchParams, totalPages]);
 
     const handleDelete = async () => {
-        const response = await fetch(`/api/user/remove_realEstate/${realestate._id}`, {
+        const response = await fetch(`/api/user/remove_realEstate/${realestateInfo._id}`, {
             method: 'DELETE',
             headers: {'Authorization': `Bearer ${user.token}`}
         });
@@ -67,7 +65,6 @@ export default function RealEstateDetail(){
     };
 
     const handlePageClick = (page) => {
-        setCurrentPage(page);
         setSearchParams({page});
     }
 
@@ -86,14 +83,14 @@ export default function RealEstateDetail(){
     return ( 
         <div className="realestatedetail-page">
             <h2>RealEstate Info</h2>
-            {realestate && <div className="realestate-details">
-                <h4>{realestate.fullname}</h4>
-                <p>Email: <strong>{realestate.email}</strong></p>
-                <p>Contact: <strong>{realestate.contact}</strong></p>
+            {realestateInfo && <div className="realestate-details">
+                <h4>{realestateInfo.fullname}</h4>
+                <p>Email: <strong>{realestateInfo.email}</strong></p>
+                <p>Contact: <strong>{realestateInfo.contact}</strong></p>
 
                 {(user?.privilege === 'superadmin') && 
                     <div>
-                        <p>Created At: <strong>{formatDistanceToNow(new Date(realestate.createdAt), {addSuffix: true})}</strong></p><br />
+                        <p>Created At: <strong>{formatDistanceToNow(new Date(realestateInfo.createdAt), {addSuffix: true})}</strong></p><br />
                         <button onClick={handleDelete}>Remove RealEstate</button>
                     </div> 
                 }

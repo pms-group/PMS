@@ -271,23 +271,24 @@ const deleteAdmin = async (req, res) => {
 // get admin route
 const getAdmins = async (req, res) => {
     const privilege = 'admin'
-    let currentPage = parseInt(req.query.page) || 1;
-    const pageSize = 1;
+    const currentPage = parseInt(req.query.page) || 1;
+    const keyWord = req.query.key;
+    const pageSize = 2;
     const _id = req.query.id;
     if(_id){
+        if(!mongoose.Types.ObjectId.isValid(_id)){
+            return res.status(400).json({error: 'Invalid ID'});
+        }
         const admin = await User.findOne({_id, privilege}).select('-username -password');
         return res.status(200).json(admin);
     }
 
-    const documentsCount = await User.countDocuments({privilege});
+    const query = keyWord ? {privilege, fullname: { $regex: keyWord, $options: 'i' } } : {privilege};
+
+    const documentsCount = await User.countDocuments(query);
     const totalPage = Math.ceil(documentsCount / pageSize);
-    let admins;
-    if(currentPage > totalPage){
-        currentPage = 1;
-        admins = []
-    } else{
-        admins = await User.find({privilege}).select('-username -password').sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
-    }
+    
+    const admins = await User.find(query).select('-username -password').sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
 
     res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);

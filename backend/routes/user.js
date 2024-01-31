@@ -24,7 +24,7 @@ router.post('/admin_signup',requireSuperAuth, userController.signupAdmin);
 // admin DELETE route
 router.delete('/remove_realestate/:id', requireSuperAuth, userController.deleteAdmin);
 
-// GET all admin route
-router.get('/view_realestates', userController.getAdmins)
+// GET all realestates route
+router.get('/view_realestates', userController.getAdmins);
 
 module.exports = router

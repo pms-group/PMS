@@ -5,27 +5,22 @@ const mongoose = require('mongoose');
 
 // GET all requests for super admin
 const getRequests = async (req, res) => {
-    let currentPage = parseInt(req.query.page) || 1;
+    const currentPage = parseInt(req.query.page) || 1;
     const pageSize = 4;
     const documentsCount = await Request.countDocuments();
     const totalPage = Math.ceil(documentsCount / pageSize);
-    let result;
-    if(currentPage > totalPage){
-        currentPage = 1;
-        result = []
-    } else{
-        const requests = await Request.find().sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
-        result = await Promise.all(
-            requests.map(async request => {
-                const apartment = await Apartment.findById(request.apartment_id);
-                const realestate = await User.findById(request.realestate_id);
-                request.realestate_name = apartment ? realestate.fullname : request.realestate_name;
-                const client_name = (await User.findById(request.client_id)).fullname;
-                request.client_name = client_name;
-                return request;
-            })
-        );
-    }
+    
+    const requests = await Request.find().sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+    const result = await Promise.all(
+        requests.map(async request => {
+            const apartment = await Apartment.findById(request.apartment_id);
+            const realestate = await User.findById(request.realestate_id);
+            request.realestate_name = apartment ? realestate.fullname : request.realestate_name;
+            const client_name = (await User.findById(request.client_id)).fullname;
+            request.client_name = client_name;
+            return request;
+        })
+    );
 
     res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);
@@ -35,28 +30,24 @@ const getRequests = async (req, res) => {
 
 // GET all requests for admin within own realestate
 const getRealEstateRequests = async (req, res) => {
-    let currentPage = parseInt(req.query.page) || 1;
+    const currentPage = parseInt(req.query.page) || 1;
     const pageSize = 4;
     const _id = req.user._id.toString();
     const documentsCount = await Request.countDocuments({realestate_id: _id});
     const totalPage = Math.ceil(documentsCount / pageSize);
-    let result;
-    if(currentPage > totalPage){
-        currentPage = 1;
-        result = []
-    } else{
-        const requests = await Request.find({realestate_id: _id}).sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
-        result = await Promise.all(
-            requests.map(async request => {
-                const apartment = await Apartment.findById(request.apartment_id);
-                const realestate_name = (await User.findById(request.realestate_id)).fullname;
-                const client_name = (await User.findById(request.client_id)).fullname;
-                request.realestate_name = apartment ? realestate_name : request.realestate_name;
-                request.client_name = client_name;
-                return request;
-            })
-        );
-    }
+    
+    const requests = await Request.find({realestate_id: _id}).sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+    const result = await Promise.all(
+        requests.map(async request => {
+            const apartment = await Apartment.findById(request.apartment_id);
+            const realestate_name = (await User.findById(request.realestate_id)).fullname;
+            const client_name = (await User.findById(request.client_id)).fullname;
+            request.realestate_name = apartment ? realestate_name : request.realestate_name;
+            request.client_name = client_name;
+            return request;
+        })
+    );
+    
 
     res.set('X-Current-Page', currentPage);    
     res.set('X-Total-Count', documentsCount);
@@ -66,28 +57,24 @@ const getRealEstateRequests = async (req, res) => {
 
 // GET all requests for client
 const getClientRequests = async (req, res) => {
-    let currentPage = parseInt(req.query.page) || 1;
+    const currentPage = parseInt(req.query.page) || 1;
     const pageSize = 4;
     const _id = req.user._id.toString();
     const documentsCount = await Request.countDocuments({client_id: _id});
     const totalPage = Math.ceil(documentsCount / pageSize);
-    let result;
-    if(currentPage > totalPage){
-        currentPage = 1;
-        result = []
-    } else{
-        const requests = await Request.find({client_id: _id}).sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
-        result = await Promise.all(
-            requests.map(async request => {
-                const apartment = await Apartment.findById(request.apartment_id);
-                const realestate = (await User.findById(request.realestate_id));
-                const client_name = (await User.findById(request.client_id)).fullname;
-                request.realestate_name = (apartment && realestate) ? realestate.fullname : request.realestate_name;
-                request.client_name = client_name;
-                return request;
-            })
-        );
-    }
+    
+    const requests = await Request.find({client_id: _id}).sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+    const result = await Promise.all(
+        requests.map(async request => {
+            const apartment = await Apartment.findById(request.apartment_id);
+            const realestate = (await User.findById(request.realestate_id));
+            const client_name = (await User.findById(request.client_id)).fullname;
+            request.realestate_name = (apartment && realestate) ? realestate.fullname : request.realestate_name;
+            request.client_name = client_name;
+            return request;
+        })
+    );
+    
     
     res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);
