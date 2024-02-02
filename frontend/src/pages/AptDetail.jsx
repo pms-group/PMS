@@ -27,7 +27,6 @@ export default function AptDetail(){
                 setApt(json);
             }
         };
-        console.log(id)
         fetchApt();
     }, [id]);
 

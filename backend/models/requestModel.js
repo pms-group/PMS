@@ -31,7 +31,7 @@ const requestSchema = new Schema({
         required: true
     },
     reply_message: {
-        tyoe: String,
+        type: String,
     },
     status: {
         type: String, // pending, accepted, rejected

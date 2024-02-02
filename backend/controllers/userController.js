@@ -273,6 +273,8 @@ const getAdmins = async (req, res) => {
     const privilege = 'admin'
     const currentPage = parseInt(req.query.page) || 1;
     const keyWord = req.query.key;
+    const sortField = req.query.sort_by;
+    const sortOrder = req.query.order === 'asc' ? 1 : -1;
     const pageSize = 2;
     const _id = req.query.id;
     if(_id){
@@ -288,7 +290,7 @@ const getAdmins = async (req, res) => {
     const documentsCount = await User.countDocuments(query);
     const totalPage = Math.ceil(documentsCount / pageSize);
     
-    const admins = await User.find(query).select('-username -password').sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+    const admins = await User.find(query).select('-username -password').sort({[sortField]: sortOrder}).skip((currentPage - 1) * pageSize).limit(pageSize);
 
     res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);

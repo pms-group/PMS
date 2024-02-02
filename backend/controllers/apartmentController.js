@@ -9,6 +9,8 @@ const fs = require('fs');
 // GET all apartments
 const getApartments = async (req, res) => {
     const currentPage = parseInt(req.query.page) || 1;
+    const sortField = req.query.sort_by;
+    const sortOrder = req.query.order === 'asc' ? 1 : -1;
     const pageSize = 4;
     const _id = req.query.id;
     if(_id){
@@ -21,7 +23,7 @@ const getApartments = async (req, res) => {
     const documentsCount = await Apartment.countDocuments();
     const totalPage = Math.ceil(documentsCount / pageSize);
 
-    const apartments = await Apartment.find().sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+    const apartments = await Apartment.find().sort({[sortField]: sortOrder}).skip((currentPage - 1) * pageSize).limit(pageSize);
     const result = await Promise.all(
         apartments.map(async apartment => {
             const realestate_name = (await User.findById(apartment.realestate_id)).fullname;
@@ -29,7 +31,6 @@ const getApartments = async (req, res) => {
             return apartment;
         })
     );
-    
     
     res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);
@@ -41,18 +42,19 @@ const getApartments = async (req, res) => {
 const getAdminApartments = async (req, res) => {
     const _id = req.query.id;
     const currentPage = parseInt(req.query.page) || 1;
+    const sortField = req.query.sort_by;
+    const sortOrder = req.query.order === 'asc' ? 1 : -1;
     const pageSize = 4;
 
     const documentsCount = await Apartment.countDocuments({realestate_id: _id});
     const totalPage = Math.ceil(documentsCount / pageSize);
     
-    const apartments = await Apartment.find({realestate_id: _id}).sort({createdAt: -1}).skip((currentPage - 1) * pageSize).limit(pageSize);
+    const apartments = await Apartment.find({realestate_id: _id}).sort({[sortField]: sortOrder}).skip((currentPage - 1) * pageSize).limit(pageSize);
     const realestate_name = (await User.findById(_id)).fullname;
     const result = apartments.map(apartment => {
         apartment.realestate_name = realestate_name;
         return apartment;
     });
-    
     
     res.set('X-Current-Page', currentPage);
     res.set('X-Total-Count', documentsCount);

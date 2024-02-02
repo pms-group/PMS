@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import {  useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify'
 import { useAuthContext, useDataContext } from "../hooks/useContexts";
 
@@ -13,9 +13,12 @@ export default function RealEstateDetail(){
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const {realestateInfo, realestateApts, realestateAptsCurrentPage: currentPage, realestateAptsTotalPages: totalPages, setCurrentPage, dispatch} = useDataContext();
+    const {realestateInfo, realestateApts, realestateAptsTotalPages: totalPages, realestateAptsParams, setRealEstateAptsParams, dispatch} = useDataContext();
     const {user} = useAuthContext();
     const { id } = useParams();
+
+    const [sortField, setSortField] = useState(realestateAptsParams.sortField);
+    const [sortOrder, setSortOrder] = useState(realestateAptsParams.sortOrder);
 
     useEffect(() => {
         const fetchRealEstate = async () => {
@@ -28,20 +31,23 @@ export default function RealEstateDetail(){
                 toast.error(json.error);
             }
         };
-
         fetchRealEstate();
     }, [dispatch, id]);
 
     useEffect(() => {
         const page = parseInt(searchParams.get('page')) || 1;
-        page !== currentPage && setCurrentPage('REALESTATEAPTS', page);
-    }, [currentPage, searchParams, setCurrentPage]);
-
-    useEffect(() => {
-        if(totalPages < 0){
-            setSearchParams({page: 1});
-        }
-    }, [setSearchParams, totalPages]);
+        const sortBy = searchParams.get('sort_by') || 'createdAt';
+        const order = searchParams.get('order') || 'desc';
+        if(page !== realestateAptsParams.currentPage ||
+            sortBy !== realestateAptsParams.sortField ||
+            order !== realestateAptsParams.sortOrder){
+                setRealEstateAptsParams({
+                    currentPage: page !== realestateAptsParams.currentPage ? page : realestateAptsParams.currentPage,
+                    sortField: sortBy !== realestateAptsParams.sortField ? sortBy : realestateAptsParams.sortField,
+                    sortOrder: order !== realestateAptsParams.sortOrder ? order : realestateAptsParams.sortOrder,
+                })
+            }
+    }, [realestateAptsParams.currentPage, realestateAptsParams.sortField, realestateAptsParams.sortOrder, searchParams, setRealEstateAptsParams]);
 
     const handleDelete = async () => {
         const response = await fetch(`/api/user/remove_realEstate/${realestateInfo._id}`, {
@@ -65,14 +71,28 @@ export default function RealEstateDetail(){
     };
 
     const handlePageClick = (page) => {
-        setSearchParams({page});
+        const prevParams = Object.fromEntries(searchParams);
+        setSearchParams({...prevParams, page});
+    }
+
+    const handleDropDownChange = (e) => {
+        const { name, value } = e.target;
+        const prevParams = Object.fromEntries(searchParams);
+        if(name === 'sort_by'){
+            setSortField(value);
+            setSortOrder('asc');
+            setSearchParams({...prevParams, [name]: value, order: 'asc'});
+        } else{
+            setSortOrder(value);
+            setSearchParams({...prevParams, [name]: value});
+        }
     }
 
     const renderPageNumbers = () => {
         const pages = [];
         for (let i = 1; i <= totalPages; i++) {
           pages.push(
-            <label key={i} className={i === currentPage ? 'active' : ''}>
+            <label key={i} className={i === realestateAptsParams.currentPage ? 'active' : ''}>
               <button onClick={() => handlePageClick(i)}>{i}</button>
             </label>
           );
@@ -96,6 +116,21 @@ export default function RealEstateDetail(){
                 }
             </div>}
 
+            <div>
+                <span>Sort by:</span>
+                <select name='sort_by' value={sortField} onChange={handleDropDownChange}>
+                    <option value="bedrooms">Bedrooms</option>
+                    <option value="bathrooms">Bathrooms</option>
+                    <option value="type">Type</option>
+                    <option value="price">Price</option>
+                    <option value="createdAt">Created Date</option>
+                </select>
+                <select name='order' value={sortOrder} onChange={handleDropDownChange}>
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+            </div>
+
             <h2>Apartments Within this RealEstate</h2>
             <div className="realestate-apts">
                 {(realestateApts?.length > 0) ? realestateApts.map( apt => (
@@ -107,11 +142,11 @@ export default function RealEstateDetail(){
             </div>
 
             {totalPages > 1 && <div className="pagination">
-                <label className="arrows"><button onClick={() => currentPage > 1 && handlePageClick(currentPage - 1)}>
+                <label className="arrows"><button onClick={() => realestateAptsParams.currentPage > 1 && handlePageClick(realestateAptsParams.currentPage - 1)}>
                     &lt;
                 </button></label>
                 {renderPageNumbers()}
-                <label className="arrows"><button onClick={() => currentPage < totalPages && handlePageClick(currentPage + 1)}>
+                <label className="arrows"><button onClick={() => realestateAptsParams.currentPage < totalPages && handlePageClick(realestateAptsParams.currentPage + 1)}>
                     &gt;
                 </button></label>
             </div>}

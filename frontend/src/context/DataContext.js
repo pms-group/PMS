@@ -47,19 +47,6 @@ export const dataReducer = (state, action) => {
             return {...state, realestateInfo: action.payload};
         case 'SET_REALESTATEAPTS':
             return {...state, realestateApts: action.payload};
-        case 'SET_CURRENT_PAGE':
-            switch (action.payload.type){
-                case 'REALESTATES':
-                    return {...state, realestatesCurrentPage: action.payload.number};
-                case 'APTS':
-                    return {...state, aptsCurrentPage: action.payload.number};
-                case 'REQUESTS':
-                    return {...state, requestsCurrentPage: action.payload.number};
-                case 'REALESTATEAPTS':
-                    return {...state, realestateAptsCurrentPage: action.payload.number};
-                default: 
-                    return state
-            };
         case 'SET_TOTAL_PAGES':
             switch (action.payload.type){
                 case 'REALESTATES':
@@ -73,8 +60,14 @@ export const dataReducer = (state, action) => {
                 default: 
                     return state
             };
-        case 'SET_SEARCH_KEY':
-            return { ...state, realestatesSearchKey: action.payload};
+        case 'SET_REALESTATES_PARAMS':
+            return { ...state, realestatesParams: action.payload};
+        case 'SET_APARTMENTS_PARAMS':
+            return { ...state, aptsParams: action.payload};
+        case 'SET_REQUESTS_PARAMS':
+            return { ...state, requestsParams: action.payload};
+        case 'SET_REALESTATEAPTS_PARAMS':
+            return { ...state, realestateAptsParams: action.payload};
         default:
             return state;
     }
@@ -84,53 +77,63 @@ export const DataContextProvider = ({children}) => {
     const {user} = useAuthContext();
 
     const [state, dispatch] = useReducer(dataReducer, {
-        apts: [],
         realestates: [],
+        realestatesParams: {
+            currentPage: 0,
+            searchKey: '',
+            sortField: '',
+            sortOrder: '',
+        },
+        realestatesTotalPages: 1,        
+        apts: [],
+        aptsParams: {
+            currentPage: 0,
+            sortField: '',
+            sortOrder: '',
+        },
+        aptsTotalPages: 1,
         requests: [],
+        requestsParams: {
+            currentPage: 0,
+            sortField: '',
+            sortOrder: '',
+        },
+        requestsTotalPages: 1,
         realestateInfo: null,
         realestateApts: [],
-        aptsCurrentPage: 0,
-        aptsTotalPages: 1,
-        realestatesCurrentPage: 0,
-        realestatesTotalPages: 1,
-        realestatesSearchKey: '',
-        requestsCurrentPage: 0,
-        requestsTotalPages: 1,
-        realestateAptsCurrentPage: 0,
+        realestateAptsParams: {
+            currentPage: 0,
+            sortField: '',
+            sortOrder: '',
+        },
         realestateAptsTotalPages: 1
     });
 
     useEffect(() => {
         const fetchRealEstates = async () => {
-            const response = await fetch(`/api/user/view_realestates?page=${state.realestatesCurrentPage}&key=${state.realestatesSearchKey}`);
+            const response = await fetch(`/api/user/view_realestates?page=${state.realestatesParams.currentPage}&key=${state.realestatesParams.searchKey}&sort_by=${state.realestatesParams.sortField}&order=${state.realestatesParams.sortOrder}`);
             const json = await response.json();
             if(response.ok){
                 const totalPages = parseInt(response.headers.get('X-Total-Pages'));
-                if(state.realestatesCurrentPage > totalPages && !state.realestatesSearchKey){
-                    return dispatch({type: 'SET_TOTAL_PAGES', payload: {type: 'REALESTATES', number: -1}});
-                }
                 dispatch({type: 'SET_REALESTATES', payload: json});
                 dispatch({type: 'SET_TOTAL_PAGES', payload: {type: 'REALESTATES', number: totalPages}});
             }
         };
-        state.realestatesCurrentPage > 0 && fetchRealEstates();
-    }, [state.realestatesCurrentPage, state.realestatesSearchKey]);
+        state.realestatesParams.currentPage > 0 && fetchRealEstates();
+    }, [state.realestatesParams.currentPage, state.realestatesParams.searchKey, state.realestatesParams.sortField, state.realestatesParams.sortOrder]);
 
     useEffect(() => {
         const fetchApartments = async () => {
-            const response = await fetch(`/api/apartments?page=${state.aptsCurrentPage}`);
+            const response = await fetch(`/api/apartments?page=${state.aptsParams.currentPage}&sort_by=${state.aptsParams.sortField}&order=${state.aptsParams.sortOrder}`);
             const json = await response.json();
             if(response.ok){
                 const totalPages = parseInt(response.headers.get('X-Total-Pages'));
-                if(state.aptsCurrentPage > totalPages){
-                    return dispatch({type: 'SET_TOTAL_PAGES', payload: {type: 'APTS', number: -1}});
-                }
                 dispatch({type: 'SET_APARTMENTS', payload: json});
                 dispatch({type: 'SET_TOTAL_PAGES', payload: {type: 'APTS', number: totalPages}});
             }
         };
-        state.aptsCurrentPage > 0 && fetchApartments();
-    }, [state.aptsCurrentPage]);
+        state.aptsParams.currentPage > 0 && fetchApartments();
+    }, [state.aptsParams.currentPage, state.aptsParams.sortField, state.aptsParams.sortOrder]);
 
     useEffect(() => {
         const fetchRequests = async (privilege, token) => {
@@ -145,43 +148,39 @@ export const DataContextProvider = ({children}) => {
                 default :
                     requestType = 'superadmin_requests';
                 }
-            const response = await fetch(`/api/requests/${requestType}?page=${state.requestsCurrentPage}`, {
+            const response = await fetch(`/api/requests/${requestType}?page=${state.requestsParams.currentPage}&sort_by=${state.requestsParams.sortField}&order=${state.requestsParams.sortOrder}`, {
                 headers: {'Authorization': `Bearer ${token}`}
             });
             const json = await response.json();
             if(response.ok){
                 const totalPages = parseInt(response.headers.get('X-Total-Pages'));
-                if(state.requestsCurrentPage > totalPages){
-                    return dispatch({type: 'SET_TOTAL_PAGES', payload: {type: 'REQUESTS', number: -1}});
-                }
                 dispatch({type: 'SET_REQUESTS', payload: json});
                 dispatch({type: 'SET_TOTAL_PAGES', payload: {type: 'REQUESTS', number: totalPages}});
             }
         };
-        user?.privilege && state.requestsCurrentPage > 0 && fetchRequests(user?.privilege, user?.token);
-    }, [user?.privilege, user?.token, state.requestsCurrentPage]);
+        user?.privilege && state.requestsParams.currentPage > 0 && fetchRequests(user?.privilege, user?.token);
+    }, [ state.requestsParams.currentPage, state.requestsParams.sortField, state.requestsParams.sortOrder, user?.privilege, user?.token]);
 
     useEffect(() => {
         const fetchRealEstateApts = async () => {
-            const response = await fetch(`/api/apartments/realestate_apartments?page=${state.realestateAptsCurrentPage}&id=${state.realestateInfo._id}`);
+            const response = await fetch(`/api/apartments/realestate_apartments?page=${state.realestateAptsParams.currentPage}&id=${state.realestateInfo._id}&sort_by=${state.realestateAptsParams.sortField}&order=${state.realestateAptsParams.sortOrder}`);
             const json = await response.json();
             if(response.ok){
                 const totalPages = parseInt(response.headers.get('X-Total-Pages'));
-                if(state.realestateAptsCurrentPage > totalPages){
-                    return dispatch({type: 'SET_TOTAL_PAGES', payload: {type: 'REALESTATEAPTS', number: -1}});
-                }
                 dispatch({type: 'SET_REALESTATEAPTS', payload: json});
                 dispatch({type: 'SET_TOTAL_PAGES', payload: {type: 'REALESTATEAPTS', number: totalPages}})
             }
         };
-        state.realestateInfo && state.realestateAptsCurrentPage > 0 && fetchRealEstateApts();
-    }, [state.realestateInfo, state.realestateAptsCurrentPage]);
+        state.realestateInfo && state.realestateAptsParams.currentPage > 0 && fetchRealEstateApts();
+    }, [state.realestateAptsParams.currentPage, state.realestateAptsParams.sortField, state.realestateAptsParams.sortOrder, state.realestateInfo]);
 
     const contextValue = {
         ...state,
         dispatch,
-        setCurrentPage: (type, number) => dispatch({type: 'SET_CURRENT_PAGE', payload: {type, number}}),
-        setSearchKey: (key) => dispatch({type: 'SET_SEARCH_KEY', payload: key})
+        setRealEstatesParams: (params) => dispatch({type: 'SET_REALESTATES_PARAMS', payload: params}),
+        setAptsParams: (params) => dispatch({type: 'SET_APARTMENTS_PARAMS', payload: params}),
+        setRequestsParams: (params) => dispatch({type: 'SET_REQUESTS_PARAMS', payload: params}),
+        setRealEstateAptsParams: (params) => dispatch({type: 'SET_REALESTATEAPTS_PARAMS', payload: params}),
       }; 
 
     return(
